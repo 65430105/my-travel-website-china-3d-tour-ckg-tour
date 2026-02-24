@@ -1,0 +1,1875 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>飞浪旅游 · Flying Waves Travel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+XiaoWei&family=Noto+Serif+SC:wght@300;400;500;700&family=Noto+Sans+SC:wght@300;400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root {
+  --smoke0: #f7f5f2;
+  --smoke1: #ede9e3;
+  --smoke2: #d8d2c8;
+  --smoke3: #bfb8ac;
+  --smoke4: #8a8279;
+  --smoke5: #5a5450;
+  --ink: #1c1a17;
+  --ink2: #2e2b26;
+  --ink3: #3f3b35;
+  --red: #8b2323;
+  --red2: #c0392b;
+  --gold: #8a6a2a;
+  --goldlt: #c4922a;
+  --goldpale: #e8d5a3;
+  --paper: #f0ebe1;
+  --paperdark: #ddd5c2;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Noto Sans SC', sans-serif;
+  background: var(--smoke0);
+  color: var(--ink);
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* ── scrollbar ── */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: var(--smoke1); }
+::-webkit-scrollbar-thumb { background: var(--smoke4); }
+
+/* ── cursor ── */
+#cur { position: fixed; width: 20px; height: 20px; border: 1px solid var(--ink3); border-radius: 50%; pointer-events: none; z-index: 99999; transform: translate(-50%,-50%); transition: width .2s, height .2s, border-color .2s; mix-blend-mode: multiply; }
+#cur2 { position: fixed; width: 4px; height: 4px; background: var(--red); border-radius: 50%; pointer-events: none; z-index: 99999; transform: translate(-50%,-50%); }
+
+/* ══════════════════════════════
+   INK WASH TEXTURES (SVG inline)
+══════════════════════════════ */
+.ink-bg {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 15% 20%, rgba(180,170,155,0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 85% 75%, rgba(140,130,115,0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 100% 40% at 50% 100%, rgba(90,84,80,0.08) 0%, transparent 50%);
+}
+
+/* ══════════════════════════════
+   HERO
+══════════════════════════════ */
+#hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background:
+    linear-gradient(180deg, #e8e3da 0%, #d4cdc0 40%, #c8c0b0 100%);
+  overflow: hidden;
+}
+
+/* Ink wash mountain silhouette */
+.hero-mountains {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 55%;
+  opacity: 0.13;
+}
+
+/* Floating calligraphy strokes */
+.stroke {
+  position: absolute;
+  background: var(--ink);
+  border-radius: 50%;
+  opacity: 0.06;
+  animation: inkFloat 8s ease-in-out infinite;
+}
+@keyframes inkFloat { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-12px) rotate(2deg)} }
+
+.hero-seal {
+  position: relative;
+  z-index: 3;
+  text-align: center;
+  animation: sealIn 1.4s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes sealIn { from{opacity:0;transform:translateY(30px) scale(.94)} to{opacity:1;transform:none} }
+
+.seal-ring {
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  border: 2px solid var(--ink3);
+  background: radial-gradient(circle, #d6cfc4 0%, #c2bbb0 50%, #b0a898 100%);
+  box-shadow:
+    inset 0 2px 8px rgba(0,0,0,0.15),
+    0 4px 20px rgba(0,0,0,0.12),
+    0 0 0 8px rgba(28,26,23,0.06);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1.8rem;
+  position: relative;
+}
+.seal-ring::before {
+  content: '';
+  position: absolute; inset: 6px;
+  border-radius: 50%;
+  border: 1px solid rgba(28,26,23,0.2);
+}
+.seal-inner {
+  text-align: center;
+}
+.seal-char {
+  font-family: 'Ma Shan Zheng', cursive;
+  font-size: 2.2rem;
+  color: var(--red);
+  line-height: 1;
+  display: block;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.1);
+}
+
+.title-zh {
+  font-family: 'Ma Shan Zheng', cursive;
+  font-size: clamp(2.6rem, 7vw, 4.5rem);
+  color: var(--ink);
+  letter-spacing: 0.3em;
+  display: block;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+  text-shadow: 2px 3px 0 rgba(0,0,0,0.06), 4px 6px 12px rgba(0,0,0,0.08);
+}
+.title-en {
+  font-family: 'Noto Serif SC', serif;
+  font-size: clamp(0.75rem, 2vw, 1.05rem);
+  letter-spacing: 0.35em;
+  color: var(--smoke5);
+  display: block;
+  text-transform: uppercase;
+  margin-bottom: 1.2rem;
+}
+.title-rule {
+  display: flex; align-items: center; justify-content: center;
+  gap: 1rem; color: var(--smoke4);
+  font-size: 0.7rem; letter-spacing: 0.2em;
+}
+.title-rule::before, .title-rule::after {
+  content: ''; display: block;
+  width: 50px; height: 1px;
+  background: linear-gradient(to right, transparent, var(--smoke4));
+}
+.title-rule::after { transform: scaleX(-1); }
+
+.scroll-cue {
+  position: absolute; bottom: 2.5rem; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 0.6rem;
+  animation: fadeUp 1s 2s both;
+  z-index: 3;
+}
+@keyframes fadeUp { from{opacity:0;transform:translateX(-50%) translateY(10px)} to{opacity:1;transform:translateX(-50%)} }
+.scroll-cue span { font-size: 0.58rem; letter-spacing: 0.22em; color: var(--smoke4); }
+.scroll-cue-line {
+  width: 1px; height: 40px;
+  background: linear-gradient(to bottom, var(--smoke4), transparent);
+  animation: drip 2.2s ease infinite;
+}
+@keyframes drip { 0%,100%{opacity:0.3} 50%{opacity:0.9} }
+
+/* ══════════════════════════════
+   INK BAND
+══════════════════════════════ */
+.ink-band {
+  background: var(--ink2);
+  padding: 0.6rem 0;
+  overflow: hidden;
+  white-space: nowrap;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.ink-band-inner {
+  display: inline-block;
+  animation: slide 40s linear infinite;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
+  color: rgba(200,193,180,0.65);
+}
+@keyframes slide { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+/* ══════════════════════════════
+   SECTION HEADERS
+══════════════════════════════ */
+.sec-head {
+  text-align: center;
+  padding: 4rem 2rem 2.5rem;
+}
+.sec-zh {
+  font-family: 'Ma Shan Zheng', cursive;
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  color: var(--ink);
+  display: block;
+  margin-bottom: 0.3rem;
+  text-shadow: 2px 3px 0 rgba(0,0,0,0.05);
+}
+.sec-en {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--smoke4);
+  display: block;
+  margin-bottom: 0.8rem;
+}
+.sec-divider {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0.8rem; color: var(--smoke3);
+}
+.sec-divider::before, .sec-divider::after {
+  content: '';
+  display: block; width: 60px; height: 1px;
+  background: linear-gradient(to right, transparent, var(--smoke3));
+}
+.sec-divider::after { transform: scaleX(-1); }
+
+/* ══════════════════════════════
+   CITIES GRID
+══════════════════════════════ */
+#cities { background: var(--smoke0); padding: 0 2rem 5rem; }
+.city-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 1.6rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.city-card {
+  border-radius: 2px;
+  overflow: hidden;
+  border: 1px solid var(--smoke2);
+  background: var(--paper);
+  cursor: none;
+  transition: transform 0.4s cubic-bezier(.16,1,.3,1), box-shadow 0.4s;
+  position: relative;
+}
+.city-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.5) 0%, transparent 60%);
+  pointer-events: none; z-index: 1;
+}
+.city-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.ci-img {
+  position: relative; height: 180px; overflow: hidden;
+}
+.ci-img img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform 0.7s;
+  filter: saturate(0.7) brightness(0.9);
+}
+.city-card:hover .ci-img img { transform: scale(1.06); }
+.ci-ov {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, transparent 30%, rgba(28,26,23,0.75));
+}
+/* Ink wash overlay on hover */
+.ci-img::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(200,193,180,0.1) 0%, transparent 50%);
+  transition: opacity 0.3s;
+}
+
+.ci-badge {
+  position: absolute; top: 0.8rem; right: 0.8rem;
+  background: rgba(28,26,23,0.7);
+  border: 1px solid rgba(200,193,180,0.3);
+  padding: 0.18rem 0.55rem;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 0.6rem; letter-spacing: 0.1em;
+  color: rgba(240,235,225,0.85);
+  backdrop-filter: blur(4px);
+}
+.ci-num {
+  position: absolute; top: 0.8rem; left: 0.9rem;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 1.4rem; font-weight: 700;
+  color: rgba(255,255,255,0.18);
+  line-height: 1;
+}
+
+.ci-body {
+  padding: 1.2rem 1.4rem 1.5rem;
+  position: relative; z-index: 2;
+}
+.ci-rule {
+  width: 100%; height: 1px;
+  background: linear-gradient(to right, var(--smoke2), transparent);
+  margin-bottom: 1rem;
+}
+.ci-zh {
+  font-family: 'Ma Shan Zheng', cursive;
+  font-size: 1.6rem;
+  color: var(--ink);
+  display: block; line-height: 1;
+  margin-bottom: 0.1rem;
+}
+.ci-en {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 0.7rem; letter-spacing: 0.12em;
+  color: var(--smoke4); display: block;
+  margin-bottom: 0.7rem;
+}
+.ci-desc {
+  font-size: 0.76rem; line-height: 1.8;
+  color: var(--smoke5);
+  margin-bottom: 1rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ci-tags {
+  display: flex; flex-wrap: wrap; gap: 0.3rem;
+  margin-bottom: 1rem;
+}
+.ci-tag {
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--smoke2);
+  font-size: 0.58rem; letter-spacing: 0.08em;
+  color: var(--smoke4); border-radius: 1px;
+}
+.ci-actions { display: flex; flex-direction: column; gap: 0.4rem; }
+.ci-btn {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; padding: 0.5rem 0.85rem;
+  border: 1px solid var(--smoke2);
+  background: transparent;
+  color: var(--ink3);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 0.7rem; letter-spacing: 0.07em;
+  cursor: none; transition: all 0.22s;
+  border-radius: 1px;
+}
+.ci-btn:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+.ci-btn.secondary {
+  background: rgba(28,26,23,0.04);
+  color: var(--smoke5);
+}
+.ci-btn.secondary:hover {
+  background: var(--smoke4);
+  border-color: var(--smoke4);
+  color: var(--paper);
+}
+.ci-btn svg { width: 12px; height: 12px; transition: transform 0.2s; }
+.ci-btn:hover svg { transform: translateX(3px); }
+
+/* ══════════════════════════════
+   ROUTE PLANNER
+══════════════════════════════ */
+#route-section {
+  background: var(--smoke1);
+  border-top: 1px solid var(--smoke2);
+  border-bottom: 1px solid var(--smoke2);
+  padding: 0 2rem 4rem;
+}
+.route-box {
+  max-width: 960px; margin: 0 auto;
+  background: var(--paper);
+  border: 1px solid var(--smoke2);
+  padding: 2rem 2rem 2.2rem;
+}
+.route-row {
+  display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;
+}
+.route-field {
+  flex: 1; min-width: 190px;
+  display: flex; flex-direction: column; gap: 0.4rem;
+}
+.route-field label {
+  font-size: 0.65rem; letter-spacing: 0.14em;
+  color: var(--smoke4);
+  font-family: 'Noto Serif SC', serif;
+}
+.route-field select {
+  background: var(--smoke0);
+  border: 1px solid var(--smoke2);
+  color: var(--ink);
+  padding: 0.6rem 2rem 0.6rem 0.85rem;
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 0.8rem; border-radius: 1px;
+  cursor: pointer; outline: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a5450' stroke-width='1.2' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 0.7rem center;
+  transition: border-color 0.2s;
+}
+.route-field select:focus { border-color: var(--ink3); }
+.route-field select option { background: var(--paper); }
+.route-swap {
+  width: 40px; height: 40px;
+  border: 1px solid var(--smoke2);
+  background: var(--smoke0);
+  color: var(--smoke4); font-size: 1rem;
+  border-radius: 1px; cursor: pointer;
+  transition: all 0.2s; flex-shrink: 0;
+}
+.route-swap:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.route-go {
+  padding: 0.6rem 1.6rem;
+  background: var(--ink); border: 1px solid var(--ink);
+  color: var(--paper);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 0.8rem; letter-spacing: 0.1em;
+  border-radius: 1px; cursor: pointer;
+  transition: all 0.22s; white-space: nowrap;
+}
+.route-go:hover { background: var(--red); border-color: var(--red); }
+
+.route-tabs {
+  display: flex; gap: 0.5rem; margin-bottom: 1.4rem;
+  border-bottom: 1px solid var(--smoke2); padding-bottom: 1rem;
+}
+.rtab {
+  padding: 0.42rem 1.1rem;
+  border: 1px solid var(--smoke2); background: transparent;
+  color: var(--smoke5); font-family: 'Noto Serif SC', serif;
+  font-size: 0.72rem; letter-spacing: 0.07em;
+  cursor: pointer; border-radius: 1px; transition: all 0.2s;
+}
+.rtab:hover { background: var(--smoke1); border-color: var(--smoke4); color: var(--ink); }
+.rtab.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+
+#route-result { margin-top: 1.8rem; }
+
+/* Attraction route result extras */
+.rr-att-path {
+  display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+  margin-bottom: 0.8rem;
+  font-family: 'Ma Shan Zheng', cursive; font-size: 1.1rem; color: var(--ink);
+}
+.rr-att-path .arr { color: var(--smoke4); font-size: 0.9rem; }
+.rr-leg {
+  background: var(--smoke0); border: 1px solid var(--smoke2);
+  padding: 0.7rem 1rem; margin-bottom: 0.5rem;
+  display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap;
+}
+.rr-leg-mode { font-size: 1.2rem; }
+.rr-leg-info { flex: 1; }
+.rr-leg-name { font-family: 'Noto Serif SC', serif; font-size: 0.74rem; color: var(--ink3); display: block; }
+.rr-leg-time { font-size: 1.1rem; font-weight: 700; color: var(--ink); font-family: 'Noto Serif SC', serif; }
+.rr-leg-detail { font-size: 0.64rem; color: var(--smoke5); line-height: 1.6; }
+.rr-leg-price { font-size: 0.7rem; color: var(--red); white-space: nowrap; }
+.rr-total {
+  background: var(--ink); color: var(--paper);
+  padding: 0.65rem 1rem; margin-top: 0.7rem;
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'Noto Serif SC', serif;
+}
+.rr-total-label { font-size: 0.65rem; letter-spacing: 0.15em; opacity: 0.7; }
+.rr-total-time { font-size: 1.3rem; font-weight: 700; }
+.rr-total-price { font-size: 0.78rem; color: var(--goldpale); }
+.rr-title {
+  font-family: 'Ma Shan Zheng', cursive;
+  font-size: 1.3rem; color: var(--ink);
+  margin-bottom: 1rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--smoke2);
+}
+.rr-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px,1fr)); gap: 0.8rem; }
+.rr-card {
+  background: var(--smoke0); border: 1px solid var(--smoke2);
+  padding: 1.1rem;
+  transition: border-color 0.2s;
+}
+.rr-card:hover { border-color: var(--smoke4); }
+.rr-mode { font-size: 1.3rem; display: block; margin-bottom: 0.35rem; }
+.rr-name { font-family: 'Noto Serif SC', serif; font-size: 0.76rem; color: var(--ink3); display: block; margin-bottom: 0.3rem; }
+.rr-time { font-size: 1.25rem; font-weight: 700; color: var(--ink); font-family: 'Noto Serif SC', serif; display: block; margin-bottom: 0.2rem; }
+.rr-detail { font-size: 0.66rem; color: var(--smoke5); line-height: 1.65; }
+.rr-price { font-size: 0.72rem; color: var(--red); margin-top: 0.35rem; display: block; }
+.rr-note { font-size: 0.68rem; color: var(--smoke4); margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid var(--smoke2); line-height: 1.7; }
+.rr-no { text-align: center; padding: 1.5rem; color: var(--smoke4); font-size: 0.82rem; }
+
+/* ══════════════════════════════
+   MAP SECTION
+══════════════════════════════ */
+#map-section { background: var(--smoke0); padding: 0 0 4rem; }
+.filter-bar {
+  display: flex; flex-wrap: wrap; gap: 0.5rem;
+  justify-content: center; padding: 0 2rem 1.5rem;
+}
+.f-chip {
+  padding: 0.38rem 1rem;
+  border: 1px solid var(--smoke2); border-radius: 100px;
+  font-size: 0.64rem; letter-spacing: 0.12em;
+  color: var(--smoke5); background: transparent;
+  cursor: none; transition: all 0.2s;
+  font-family: 'Noto Serif SC', serif;
+}
+.f-chip:hover, .f-chip.on {
+  background: var(--ink); border-color: var(--ink);
+  color: var(--paper);
+}
+.f-chip.on[data-cat="park"]    { background: #3a6b42; border-color: #3a6b42; }
+.f-chip.on[data-cat="mountain"]{ background: #4a5562; border-color: #4a5562; }
+.f-chip.on[data-cat="zoo"]     { background: #7a4b2a; border-color: #7a4b2a; }
+.f-chip.on[data-cat="temple"]  { background: #5a3a6b; border-color: #5a3a6b; }
+.f-chip.on[data-cat="fun"]     { background: #7a2a4a; border-color: #7a2a4a; }
+.f-chip.on[data-cat="glacier"] { background: #2a6b8a; border-color: #2a6b8a; }
+.f-chip.on[data-cat="transport"]{ background: #5a4a2a; border-color: #5a4a2a; }
+.f-chip.on[data-cat="village"] { background: #6b4a1a; border-color: #6b4a1a; }
+
+.map-wrap {
+  height: 70vh; min-height: 500px;
+  border-top: 1px solid var(--smoke2);
+  border-bottom: 1px solid var(--smoke2);
+}
+#tmap { width: 100%; height: 100%; }
+
+/* Leaflet overrides */
+.leaflet-container { background: #e8e3da !important; font-family: 'Noto Sans SC',sans-serif !important; }
+.leaflet-control-zoom a { background: var(--paper) !important; color: var(--ink) !important; border-color: var(--smoke2) !important; }
+.leaflet-control-zoom a:hover { background: var(--ink) !important; color: var(--paper) !important; }
+.leaflet-popup-content-wrapper { background: var(--paper) !important; border: 1px solid var(--smoke2) !important; border-radius: 2px !important; box-shadow: 0 4px 16px rgba(0,0,0,0.15) !important; font-family: 'Noto Sans SC', sans-serif !important; font-size: 0.78rem !important; color: var(--ink) !important; }
+.leaflet-popup-tip { background: var(--paper) !important; }
+.leaflet-popup-close-button { color: var(--smoke4) !important; }
+.airport-popup b { font-family: 'Noto Serif SC', serif; color: var(--red); }
+
+.city-marker-label {
+  position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  margin-top: 3px;
+  background: rgba(28,26,23,0.85);
+  border: 1px solid rgba(200,193,180,0.25);
+  padding: 0.18rem 0.5rem;
+  font-family: 'Noto Serif SC', serif; font-size: 0.6rem;
+  color: rgba(240,235,225,0.9); white-space: nowrap; border-radius: 1px;
+  pointer-events: none;
+}
+
+/* ── ATTRACTION SIDE PANEL ── */
+#attpop {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: 380px;
+  z-index: 8000;
+  background: var(--paper);
+  border-left: 1px solid var(--smoke2);
+  box-shadow: -8px 0 40px rgba(0,0,0,0.13);
+  overflow-y: auto;
+  transform: translateX(110%);
+  transition: transform 0.35s cubic-bezier(.16,1,.3,1);
+  display: block !important;
+}
+#attpop.open { transform: translateX(0); }
+@media(max-width:600px){
+  #attpop{ width:100%; border-left:none; border-top:1px solid var(--smoke2); top:auto; height:75vh; transform:translateY(110%); }
+  #attpop.open{ transform:translateY(0); }
+}
+.atp-close-bar {
+  position: sticky; top: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--paper);
+  border-bottom: 1px solid var(--smoke2);
+  z-index: 2;
+}
+.atp-close-bar span {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 0.6rem; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--smoke4);
+}
+.atp-close-btn {
+  width: 28px; height: 28px;
+  border: 1px solid var(--smoke2); background: transparent;
+  color: var(--ink3); cursor: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem; transition: all 0.2s; flex-shrink: 0;
+}
+.atp-close-btn:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.atp-img { width: 100%; height: 200px; object-fit: cover; display: block; filter: saturate(0.7) brightness(0.88); }
+.atp-img-ph { width: 100%; height: 160px; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; background: var(--smoke1); }
+.atp-body { padding: 1.3rem 1.5rem 2rem; }
+.atp-cat {
+  display: inline-block; padding: 0.18rem 0.6rem;
+  font-size: 0.58rem; letter-spacing: 0.12em;
+  text-transform: uppercase; font-weight: 600;
+  margin-bottom: 0.65rem; border-radius: 1px;
+}
+.atp-zh { font-family: 'Ma Shan Zheng', cursive; font-size: 2rem; color: var(--ink); line-height: 1.1; display: block; }
+.atp-en { font-family: 'Noto Serif SC', serif; font-size: 0.7rem; letter-spacing: 0.12em; color: var(--smoke4); display: block; margin-bottom: 0.9rem; }
+.atp-desc { font-size: 0.8rem; line-height: 1.85; color: var(--smoke5); margin-bottom: 1.1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--smoke2); }
+.atp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem; }
+.atp-cell { background: var(--smoke0); border: 1px solid var(--smoke2); padding: 0.65rem 0.85rem; }
+.atp-lbl { font-size: 0.56rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--smoke4); margin-bottom: 0.22rem; }
+.atp-val { font-size: 0.82rem; font-weight: 500; color: var(--ink); font-family: 'Noto Serif SC', serif; line-height: 1.4; }
+.atp-val.grn { color: #3a6b42; }
+.atp-val.warn { color: var(--red); }
+.atp-val.gold { color: var(--gold); }
+.atp-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.3rem; }
+.atp-tag { padding: 0.22rem 0.65rem; border-radius: 100px; font-size: 0.62rem; border: 1px solid var(--smoke2); color: var(--smoke5); line-height: 1.5; }
+.atp-tag.y { background: rgba(58,107,66,.1); border-color: rgba(58,107,66,.3); color: #3a6b42; }
+.atp-tag.w { background: rgba(139,35,35,.07); border-color: rgba(139,35,35,.2); color: var(--red); }
+
+/* ── CITY MODAL ── */
+#mdbg {
+  display: none; position: fixed; inset: 0;
+  background: rgba(28,26,23,0.7);
+  backdrop-filter: blur(6px);
+  z-index: 9000; align-items: center; justify-content: center;
+  padding: 1.5rem;
+}
+#mdbg.open { display: flex; }
+.md {
+  background: var(--paper);
+  border: 1px solid var(--smoke2);
+  width: 100%; max-width: 820px; max-height: 90vh; overflow: auto;
+  animation: mdIn .35s cubic-bezier(.16,1,.3,1);
+  box-shadow: 0 40px 100px rgba(0,0,0,0.2);
+}
+@keyframes mdIn { from{opacity:0;transform:scale(.94) translateY(16px)} to{opacity:1;transform:none} }
+.md-close-bar {
+  position: sticky; top: 0;
+  display: flex; justify-content: flex-end;
+  padding: 0.7rem 0.85rem;
+  background: linear-gradient(to bottom, var(--paper) 60%, transparent);
+  z-index: 10;
+}
+.md-x {
+  width: 30px; height: 30px;
+  border: 1px solid var(--smoke2);
+  background: transparent;
+  color: var(--ink3); cursor: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem; transition: all 0.2s;
+}
+.md-x:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.md-hero {
+  position: relative; height: 240px; overflow: hidden;
+  margin-top: -36px;
+}
+.md-hero img { width: 100%; height: 100%; object-fit: cover; filter: saturate(0.65) brightness(0.88); }
+.md-hero-ov { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 25%, rgba(28,26,23,0.85)); }
+.md-htitle { position: absolute; bottom: 1.4rem; left: 1.8rem; }
+.md-czh { font-family: 'Ma Shan Zheng', cursive; font-size: 2.8rem; color: var(--paper); display: block; line-height: 1; text-shadow: 0 2px 12px rgba(0,0,0,0.4); }
+.md-cen { font-family: 'Noto Serif SC', serif; font-size: 0.72rem; letter-spacing: 0.2em; color: rgba(240,235,225,0.6); text-transform: uppercase; }
+.md-body { padding: 0 1.8rem 2.2rem; }
+.ig { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.6rem; margin: 1.2rem 0; }
+.ig-b { background: var(--smoke0); border: 1px solid var(--smoke2); padding: 0.75rem 0.85rem; }
+.ig-l { font-size: 0.56rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--smoke4); margin-bottom: 0.22rem; }
+.ig-v { font-size: 0.84rem; font-weight: 500; color: var(--ink); font-family: 'Noto Serif SC', serif; }
+.ig-v.red { color: var(--red2); }
+.ig-v.gold { color: var(--gold); }
+.ms { margin-bottom: 1.5rem; }
+.ms-t {
+  font-family: 'Noto Serif SC', serif; font-size: 0.65rem;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--smoke4);
+  padding-bottom: 0.5rem; margin-bottom: 0.85rem;
+  border-bottom: 1px solid var(--smoke2);
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.ms-t::before { content: '⬛'; font-size: 0.4rem; color: var(--ink); }
+.ms-txt { font-size: 0.8rem; line-height: 1.9; color: var(--smoke5); }
+
+/* Attraction list in modal */
+.al { display: flex; flex-direction: column; gap: 0.45rem; }
+.ai {
+  display: flex; align-items: flex-start; gap: 0.75rem;
+  background: var(--smoke0); border: 1px solid var(--smoke2);
+  padding: 0.7rem 0.85rem;
+  transition: border-color 0.2s;
+}
+.ai:hover { border-color: var(--smoke4); }
+.ai-ic { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+.ai-zh { font-family: 'Ma Shan Zheng', cursive; font-size: 0.9rem; color: var(--ink3); }
+.ai-n { font-family: 'Noto Serif SC', serif; font-size: 0.78rem; color: var(--ink); display: block; }
+.ai-d { font-size: 0.68rem; color: var(--smoke4); line-height: 1.6; }
+
+.tg { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+.ti { background: var(--smoke0); border: 1px solid var(--smoke2); padding: 0.75rem 0.85rem; }
+.ti-ic { font-size: 1.1rem; display: block; margin-bottom: 0.3rem; }
+.ti-l { font-size: 0.56rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--smoke4); margin-bottom: 0.22rem; }
+.ti-v { font-size: 0.76rem; color: var(--ink); font-family: 'Noto Serif SC', serif; line-height: 1.55; }
+.trans-btns { display: flex; gap: 0.5rem; margin-top: 0.7rem; flex-wrap: wrap; }
+.tbtn {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  padding: 0.42rem 0.9rem; font-size: 0.68rem;
+  font-family: 'Noto Serif SC', serif; letter-spacing: 0.06em;
+  text-decoration: none; cursor: pointer; border: 1px solid var(--smoke2);
+  background: transparent; color: var(--ink3); transition: all 0.2s;
+}
+.tbtn:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+/* footer */
+footer {
+  background: var(--ink2);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  text-align: center; padding: 2.5rem 2rem;
+}
+.ft-zh { font-family: 'Ma Shan Zheng', cursive; font-size: 1.8rem; color: rgba(240,235,225,0.8); display: block; margin-bottom: 0.4rem; }
+footer p { font-size: 0.65rem; letter-spacing: 0.14em; color: rgba(200,193,180,0.4); }
+
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.6s ease, transform 0.6s ease; }
+.reveal.on { opacity: 1; transform: none; }
+
+@media(max-width:768px){
+  .ig{grid-template-columns:1fr 1fr}
+  .tg{grid-template-columns:1fr}
+
+  .atp-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur2"></div>
+
+<!-- ════ HERO ════ -->
+<section id="hero">
+  <div class="ink-bg"></div>
+
+  <!-- Ink wash mountains SVG -->
+  <svg class="hero-mountains" viewBox="0 0 1440 400" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,400 L0,280 Q80,180 160,220 Q240,260 320,160 Q380,90 440,140 Q500,190 560,120 Q620,50 680,80 Q740,110 800,60 Q860,10 920,50 Q980,90 1040,160 Q1100,230 1160,180 Q1220,130 1280,200 Q1360,270 1440,240 L1440,400 Z" fill="#1c1a17" opacity="0.06"/>
+    <path d="M0,400 L0,320 Q100,240 200,270 Q300,300 400,220 Q480,160 560,200 Q640,240 720,170 Q800,100 880,150 Q960,200 1040,260 Q1120,320 1200,280 Q1320,230 1440,300 L1440,400 Z" fill="#1c1a17" opacity="0.05"/>
+    <path d="M0,400 L0,360 Q180,310 360,330 Q540,350 720,300 Q900,250 1080,320 Q1260,390 1440,350 L1440,400 Z" fill="#1c1a17" opacity="0.04"/>
+  </svg>
+
+  <!-- Background ink strokes (decorative) -->
+  <div class="stroke" style="width:300px;height:300px;top:5%;left:-8%;animation-delay:0s"></div>
+  <div class="stroke" style="width:200px;height:200px;top:20%;right:-5%;animation-delay:2s"></div>
+  <div class="stroke" style="width:150px;height:150px;bottom:15%;left:10%;animation-delay:4s"></div>
+
+  <div class="hero-seal">
+    <div class="seal-ring">
+      <div class="seal-inner">
+        <span class="seal-char">飛</span>
+      </div>
+    </div>
+    <span class="title-zh">飞浪旅游</span>
+    <span class="title-en">Flying Waves Travel</span>
+    <div class="title-rule">ค้นพบมนต์เสน่ห์แห่งแดนมังกร</div>
+  </div>
+
+  <div class="scroll-cue">
+    <span>向下滚动 · เลื่อนลง</span>
+    <div class="scroll-cue-line"></div>
+  </div>
+</section>
+
+<!-- Ink band marquee -->
+<div class="ink-band">
+  <span class="ink-band-inner">✦ 成都 เฉิงตู &nbsp;✦ 北京 ปักกิ่ง &nbsp;✦ 上海 เซี่ยงไฮ้ &nbsp;✦ 西安 ซีอาน &nbsp;✦ 桂林 กุ้ยหลิน &nbsp;✦ 丽江 ลี่เจียง &nbsp;✦ 重庆 ฉงชิ่ง &nbsp;✦ 张家界 จางเจียเจี้ย &nbsp;✦ 杭州 หังโจว &nbsp;✦ 云南 ยูนนาน &nbsp;✦ 西藏 ทิเบต &nbsp;✦ 黄山 หวงซาน &nbsp;✦ 厦门 เซียะเหมิน &nbsp;✦ 大理 ต้าหลี่ &nbsp;✦ 昆明 คุนหมิง &nbsp;✦ 三亚 ซานย่า &nbsp;✦ 广州 กว่างโจว &nbsp;✦ 成都 เฉิงตู &nbsp;✦ 北京 ปักกิ่ง &nbsp;✦ 上海 เซี่ยงไฮ้ &nbsp;✦ 西安 ซีอาน &nbsp;✦ 桂林 กุ้ยหลิน &nbsp;✦ 丽江 ลี่เจียง &nbsp;✦ 重庆 ฉงชิ่ง &nbsp;✦ 张家界 จางเจียเจี้ย &nbsp;✦ 杭州 หังโจว &nbsp;✦ 云南 ยูนนาน &nbsp;✦ 西藏 ทิเบต &nbsp;✦ 黄山 หวงซาน &nbsp;✦ 厦门 เซียะเหมิน &nbsp;✦ 大理 ต้าหลี่ &nbsp;✦ 昆明 คุนหมิง &nbsp;✦ 三亚 ซานย่า &nbsp;✦ 广州 กว่างโจว &nbsp;</span>
+</div>
+
+<!-- ════ CITIES ════ -->
+<section id="cities">
+  <div class="sec-head">
+    <span class="sec-zh">探索中国</span>
+    <span class="sec-en">Explore China's Greatest Destinations</span>
+    <div class="sec-divider">✦</div>
+  </div>
+  <div class="city-grid" id="cityGrid"></div>
+</section>
+
+<!-- ROUTE PLANNER -->
+<section id="route-section">
+  <div class="sec-head">
+    <span class="sec-zh">查询路线</span>
+    <span class="sec-en">Journey Planner · วางแผนเดินทาง</span>
+    <div class="sec-divider">✦</div>
+  </div>
+  <div class="route-box">
+    <div class="route-tabs">
+      <button class="rtab on" onclick="switchTab('city',this)">🏙️ เมือง → เมือง</button>
+      <button class="rtab" onclick="switchTab('att',this)">📍 สถานที่ → สถานที่</button>
+    </div>
+    <div id="tab-city">
+      <div class="route-row">
+        <div class="route-field">
+          <label>🛫 ต้นทาง</label>
+          <select id="rFrom"><option value="">-- เลือกเมืองต้นทาง --</option></select>
+        </div>
+        <button class="route-swap" onclick="swapRoute()" title="สลับ">⇄</button>
+        <div class="route-field">
+          <label>🛬 ปลายทาง</label>
+          <select id="rTo"><option value="">-- เลือกเมืองปลายทาง --</option></select>
+        </div>
+        <button class="route-go" onclick="calcRoute()">ค้นหา 🔍</button>
+      </div>
+    </div>
+    <div id="tab-att" style="display:none">
+      <div class="route-row">
+        <div class="route-field">
+          <label>📍 จากสถานที่</label>
+          <select id="aFrom"><option value="">-- เลือกสถานที่ต้นทาง --</option></select>
+        </div>
+        <button class="route-swap" onclick="swapAtt()" title="สลับ">⇄</button>
+        <div class="route-field">
+          <label>📍 ไปสถานที่</label>
+          <select id="aTo"><option value="">-- เลือกสถานที่ปลายทาง --</option></select>
+        </div>
+        <button class="route-go" onclick="calcAttRoute()">ค้นหา 🔍</button>
+      </div>
+    </div>
+    <div id="route-result" style="display:none"></div>
+  </div>
+</section>
+
+<!-- ════ MAP ════ -->
+<section id="map-section">
+  <div class="sec-head">
+    <span class="sec-zh">互动地图</span>
+    <span class="sec-en">Interactive Map · แผนที่สถานที่ท่องเที่ยว</span>
+    <div class="sec-divider">✦</div>
+  </div>
+  <div class="filter-bar">
+    <button class="f-chip" data-cat="all" onclick="setFilter('all',this)">🗺 ทั้งหมด</button>
+    <button class="f-chip" data-cat="park" onclick="setFilter('park',this)">🌿 อุทยาน</button>
+    <button class="f-chip" data-cat="mountain" onclick="setFilter('mountain',this)">⛰ ภูเขา</button>
+    <button class="f-chip" data-cat="glacier" onclick="setFilter('glacier',this)">🧊 หิมะ/ธารน้ำแข็ง</button>
+    <button class="f-chip" data-cat="zoo" onclick="setFilter('zoo',this)">🐼 แพนด้า</button>
+    <button class="f-chip" data-cat="temple" onclick="setFilter('temple',this)">🛕 วัด</button>
+    <button class="f-chip" data-cat="village" onclick="setFilter('village',this)">🏘️ เมือง/ทะเลสาบ</button>
+    <button class="f-chip" data-cat="transport" onclick="setFilter('transport',this)">🚄 การเดินทาง</button>
+    <button class="f-chip" id="airport-chip" onclick="toggleAirports(this)">✈️ สนามบิน</button>
+    <button class="f-chip" id="hsr-chip" onclick="toggleHSR(this)">🚄 สถานี HSR</button>
+    <button class="f-chip" data-cat="fun" onclick="setFilter('fun',this)">🎡 สวนสนุก</button>
+  </div>
+  <div id="map-hint" style="text-align:center;padding:0 0 1rem;font-size:0.68rem;letter-spacing:0.14em;color:var(--smoke4);font-family:'Noto Serif SC',serif">
+    ✦ กดปุ่มหมวดหมู่ด้านบนเพื่อแสดงสถานที่บนแผนที่ ✦
+  </div>
+  <div class="map-wrap"><div id="tmap"></div></div>
+</section>
+
+<!-- Attraction popup -->
+<div id="attpop">
+  <div class="atp-close-bar">
+    <span>สถานที่ท่องเที่ยว · Attraction</span>
+    <button class="atp-close-btn" onclick="closeAtt()">✕</button>
+  </div>
+  <div id="attpop-inner"></div>
+</div>
+
+<!-- City modal -->
+<div id="mdbg" onclick="closeMd(event)">
+  <div class="md" id="mdbox"></div>
+</div>
+
+<!-- Footer band -->
+<div class="ink-band">
+  <span class="ink-band-inner">✦ ยินดีต้อนรับสู่ประเทศจีน · 欢迎来到中国 · Welcome to China &nbsp;✦&nbsp; ยินดีต้อนรับสู่ประเทศจีน · 欢迎来到中国 · Welcome to China &nbsp;✦&nbsp; ยินดีต้อนรับสู่ประเทศจีน · 欢迎来到中国 · Welcome to China &nbsp;✦</span>
+</div>
+<footer>
+  <span class="ft-zh">飞浪旅游</span>
+  <p>FLYING WAVES TRAVEL · สายบินสู่มังกร · © 2025</p>
+</footer>
+
+<script>
+/* ══════════════════════════════
+   CAT CONFIG
+══════════════════════════════ */
+const catColors = { park:'#3a6b42', mountain:'#4a5562', zoo:'#7a4b2a', temple:'#5a3a6b', fun:'#7a2a4a', glacier:'#2a6b8a', transport:'#5a4a2a', village:'#6b4a1a' };
+const catNames  = { park:'อุทยาน', mountain:'ภูเขา', zoo:'แพนด้า', temple:'วัด', fun:'สวนสนุก', glacier:'หิมะ/ธารน้ำแข็ง', transport:'การเดินทาง', village:'เมืองโบราณ/ทะเลสาบ' };
+const catEmoji  = { park:'🌿', mountain:'⛰', zoo:'🐼', temple:'🛕', fun:'🎡', glacier:'🧊', transport:'🚄', village:'🏘️' };
+
+/* ══════════════════════════════
+   ATTRACTIONS
+══════════════════════════════ */
+const attractions = [
+  {id:'jiuzhaigou',zh:'九寨沟',en:'Jiuzhaigou Valley',th:'จิ่วจ้ายโกว',cat:'park',lat:33.26,lng:103.92,price:169,hours:'08:00–17:00',closedSeason:'พ.ย.–มี.ค.',elevation:'2,000–3,100 ม.',oxygen:true,elderly:'⚠️ ระวัง',kids:'✅ ได้',bus:'✅ รถบัส ~9–10 ชม.',desc:'อุทยานมรดกโลก UNESCO ทะเลสาบหลากสีและน้ำตกที่สวยที่สุดในจีน บินจากเฉิงตู 45 นาที',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'huanglong_cd',zh:'黄龙',en:'Huanglong',th:'หวงหลง',cat:'park',lat:32.75,lng:103.82,price:120,hours:'08:00–17:00',closedSeason:'พ.ย.–เม.ย.',elevation:'3,100–3,578 ม.',oxygen:true,elderly:'⚠️ ระวัง',kids:'⚠️ ระวัง',bus:'✅ รถบัสจากจิ่วจ้ายโกว',desc:'ลำธารหินปูนสีทอง มรดกโลก UNESCO ไปคู่จิ่วจ้ายโกว ระวัง Altitude Sickness',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'jzh_airport',zh:'九黄机场',en:'Jiuzhaigou Huanglong Airport',th:'สนามบินจิ่วจ้าย-หวงหลง',cat:'transport',lat:32.853,lng:103.682,price:0,hours:'ตลอดวัน',closedSeason:'เปิดตลอดปี',elevation:'3,437 ม.',oxygen:true,elderly:'⚠️ ระวัง Altitude',kids:'⚠️ ระวัง',bus:'✅ บินจากเฉิงตู CTU 45 นาที',desc:'สนามบินสูงสุดในจีน ระดับ 3,437 ม. บินจากเฉิงตู (CTU) 45 นาที หรือรถบัส 9 ชม.',img:''},
+  {id:'zhangjiajie_np',zh:'张家界',en:'Zhangjiajie NP',th:'จางเจียเจี้ย',cat:'park',lat:29.32,lng:110.44,price:248,hours:'07:00–18:00',closedSeason:'เปิดตลอดปี',elevation:'200–1,200 ม.',oxygen:false,elderly:'⚠️ บางเส้นทาง',kids:'✅ ได้',bus:'✅ รถภายในอุทยาน',desc:'เสาหินทรายกว่า 3,000 ต้น ต้นแบบดาว Pandora ในภาพยนตร์ Avatar',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'liriver',zh:'漓江',en:'Li River',th:'แม่น้ำหลี่',cat:'park',lat:25.27,lng:110.29,price:210,hours:'08:00–17:00',closedSeason:'เปิดตลอดปี',elevation:'150–500 ม.',oxygen:false,elderly:'✅ ล่องเรือ',kids:'✅ ได้',bus:'✅ มีเรือ',desc:'ล่องแม่น้ำหลี่ผ่านภูเขาหินปูนสุดสวยงาม',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'emei',zh:'峨眉山',en:'Mount Emei',th:'ง๊อไบ๊',cat:'mountain',lat:29.52,lng:103.33,price:185,hours:'06:00–18:00',closedSeason:'เปิดตลอดปี',elevation:'500–3,099 ม.',oxygen:false,elderly:'✅ มีกระเช้า',kids:'✅ ได้',bus:'✅ รถไฟจากเฉิงตู 1 ชม.',desc:'ภูเขาศักดิ์สิทธิ์ 1 ใน 4 แห่งพุทธจีน วัดโบราณ ลิงป่า กระเช้าลอยฟ้า ยอด 3,099 ม.',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'siguniang',zh:'四姑娘山',en:'Siguniang Mountain',th:'สีดรุณี (สี่สาวน้อย)',cat:'mountain',lat:31.05,lng:102.97,price:80,hours:'08:00–17:00',closedSeason:'เปิดตลอดปี',elevation:'3,600–6,250 ม.',oxygen:true,elderly:'⚠️ ระวัง',kids:'⚠️ ระวัง',bus:'✅ รถบัสจากเฉิงตู ~5 ชม.',desc:'ยอดเขาหิมะ "สี่สาวน้อย" สูงสุด 6,250 ม. สวยงามดั่งนางฟ้า เดินป่าหุบเขาดอกไม้',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'shuangqiaogou',zh:'双桥沟',en:'Shuangqiao Valley',th:'ซวงเฉียวโกว',cat:'park',lat:31.00,lng:102.90,price:80,hours:'07:30–17:30',closedSeason:'เปิดตลอดปี',elevation:'2,600–4,500 ม.',oxygen:true,elderly:'⚠️ บางเส้นทาง',kids:'✅ ได้',bus:'✅ รถบัสในอุทยาน',desc:'หุบเขาดอกไม้ในอ้อมกอดสี่สาวน้อย ทุ่งหญ้า ป่าสน วิวภูเขาหิมะตระการตา',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'xiling_snow',zh:'西岭雪山',en:'Xiling Snow Mountain',th:'ภูเขาหิมะซีหลิง',cat:'glacier',lat:30.56,lng:102.90,price:138,hours:'08:00–17:00',closedSeason:'เปิดตลอดปี',elevation:'1,000–5,364 ม.',oxygen:false,elderly:'✅ มีกระเช้า',kids:'✅ ได้',bus:'✅ รถบัสจากเฉิงตู ~2 ชม.',desc:'ภูเขาหิมะใกล้เฉิงตูที่สุด ห่างเพียง 95 กม. สกี กระเช้า วิวหิมะสวย เหมาะวันเดย์ทริป',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'wawu',zh:'瓦屋山',en:'Wawu Mountain',th:'ภูเขาวาวู่',cat:'mountain',lat:29.83,lng:102.88,price:100,hours:'08:00–17:00',closedSeason:'เปิดตลอดปี',elevation:'1,000–2,830 ม.',oxygen:false,elderly:'✅ มีกระเช้า',kids:'✅ ได้',bus:'✅ รถบัสจากเฉิงตู ~3 ชม.',desc:'ยอดแบนราบ "โต๊ะยักษ์" สูง 2,830 ม. ทะเลหมอก ดอกไม้ป่าหายาก นกหายากนานาชนิด',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'bipeng',zh:'毕棚沟',en:'Bipeng Valley',th:'ปี้เผิงโกว',cat:'park',lat:31.65,lng:102.70,price:90,hours:'08:00–17:00',closedSeason:'พ.ย.–มี.ค.',elevation:'2,800–4,500 ม.',oxygen:true,elderly:'⚠️ ระวัง',kids:'⚠️ ระวัง',bus:'✅ รถบัสจากเฉิงตู ~5 ชม.',desc:'หุบเขาใบไม้เหลือง-แดงสวยที่สุดในเสฉวน ช่วง ต.ค. ทุ่งหญ้า ทะเลสาบ สายน้ำใส',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'lixian_guer',zh:'理县古尔沟',en:'Lixian / Guer Hot Spring',th:'ลี่เสี้ยน / กู่เอ่อโกว',cat:'village',lat:31.43,lng:102.77,price:60,hours:'08:00–22:00',closedSeason:'เปิดตลอดปี',elevation:'1,900 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ รถบัสจากเฉิงตู ~4 ชม.',desc:'น้ำพุร้อนกู่เอ่อโกวสุดหรู บรรยากาศชนเผ่าทิเบต อำเภอลี่เสี้ยน เส้นทางสู่จิ่วจ้ายโกว',img:''},
+  {id:'dagu_glacier',zh:'达古冰川',en:'Dagu Glacier',th:'ธารน้ำแข็งต๋ากู่',cat:'glacier',lat:32.45,lng:102.88,price:198,hours:'08:00–17:00',closedSeason:'มิ.ย.–ส.ค. (ฤดูร้อน)',elevation:'3,988–4,860 ม.',oxygen:true,elderly:'⚠️ ระวัง',kids:'⚠️ ระวัง',bus:'✅ รถบัสจากเฉิงตู ~6 ชม.',desc:'ธารน้ำแข็งที่ใกล้เฉิงตูที่สุด กระเช้าสู่ระดับ 4,860 ม. หิมะขาวโพลน วิวสวยงาม',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'heishui_zhagana',zh:'黑水扎尕然',en:'Heishui Zhagana',th:'เฮ่ยสุ่ยเจียหรง',cat:'village',lat:32.38,lng:102.97,price:50,hours:'ตลอดวัน',closedSeason:'เปิดตลอดปี',elevation:'2,500–3,200 ม.',oxygen:true,elderly:'⚠️ ระวัง',kids:'✅ ได้',bus:'✅ รถบัสจากเฉิงตู ~7 ชม.',desc:'หมู่บ้านหินทิเบตโบราณในหุบเขาเฮ่ยสุ่ย บ้านหินสูงชัน วิวภูเขาตระการตา ยังไม่เป็นที่รู้จัก',img:''},
+  {id:'litang_xiaolu',zh:'理塘/理小路',en:'Litang / Lixiao Road',th:'หลีเสียวลู่ / ลี่ถัง',cat:'village',lat:29.99,lng:100.27,price:0,hours:'ตลอดวัน',closedSeason:'เปิดตลอดปี',elevation:'4,014 ม.',oxygen:true,elderly:'⚠️ ระวัง',kids:'⚠️ ระวัง',bus:'✅ บินหรือรถบัส ~8 ชม.',desc:'ทุ่งหญ้าสูง 4,000+ ม. วิถีชีวิตคาวบอยทิเบต เส้นทาง G318 สายโรแมนติก เมืองสูงสุดในโลก',img:''},
+  {id:'lianbaoyeze',zh:'莲宝叶则',en:'Lianbaoyeze',th:'เหลี่ยนเป่าเย่เจ้อ',cat:'park',lat:33.82,lng:102.12,price:80,hours:'08:00–17:00',closedSeason:'พ.ย.–เม.ย.',elevation:'3,500–4,200 ม.',oxygen:true,elderly:'⚠️ ระวัง',kids:'⚠️ ระวัง',bus:'✅ รถบัสจากเฉิงตู ~8 ชม.',desc:'ทะเลสาบและทุ่งหญ้าบนที่ราบสูง 3,500–4,200 ม. เงียบสงบ นักท่องเที่ยวน้อย ⚠️ ต้องมีเอกสารพิเศษ',img:''},
+  {id:'huangshan_mt',zh:'黄山',en:'Huangshan',th:'หวงซาน',cat:'mountain',lat:30.13,lng:118.16,price:190,hours:'06:00–17:30',closedSeason:'เปิดตลอดปี',elevation:'700–1,864 ม.',oxygen:false,elderly:'✅ มีกระเช้า',kids:'✅ ได้',bus:'✅ กระเช้า',desc:'ทะเลเมฆ หินพิสดาร สนจีนโบราณ มรดกโลก UNESCO',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'panda_base',zh:'大熊猫繁育基地',en:'Giant Panda Base',th:'ศูนย์อนุรักษ์แพนด้า',cat:'zoo',lat:30.737,lng:104.142,price:55,hours:'07:30–18:00',closedSeason:'เปิดตลอดปี',elevation:'500 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ เด็กชอบมาก',bus:'✅ MRT สาย 3 + รถบัส',desc:'ศูนย์อนุรักษ์แพนด้ายักษ์ที่ใหญ่สุดในโลก กว่า 200 ตัว ดูตอนเช้า 07:30–09:00 สนุกที่สุด',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'panda_selfie',zh:'都江堰熊猫乐园',en:'Dujiangyan Panda Selfie',th:'แพนด้าเซลฟี่ ตูเจียงเยี่ยน',cat:'zoo',lat:31.002,lng:103.588,price:1800,hours:'08:30–11:30',closedSeason:'ต้องจองล่วงหน้า',elevation:'700 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ชอบมาก',bus:'✅ รถไฟจากเฉิงตู 1 ชม.',desc:'ที่เดียวในโลกที่จ่ายเงินอุ้มแพนด้าถ่ายรูปได้ถูกกฎหมาย ¥1,800+ ต้องจองล่วงหน้า',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'dujiangyan',zh:'都江堰',en:'Dujiangyan Irrigation',th:'ตูเจียงเยี่ยน',cat:'temple',lat:30.997,lng:103.591,price:90,hours:'08:00–18:00',closedSeason:'เปิดตลอดปี',elevation:'727 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ รถไฟจากเฉิงตู 1 ชม.',desc:'ระบบชลประทาน 2,300 ปี มรดกโลก UNESCO วิศวกรรมโบราณที่ยังใช้งานได้จนปัจจุบัน',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'maoxian',zh:'茂县',en:'Maoxian',th:'เม่าเสี้ยน',cat:'village',lat:31.67,lng:103.85,price:0,hours:'ตลอดวัน',closedSeason:'เปิดตลอดปี',elevation:'1,580 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ รถบัสจากเฉิงตู ~3 ชม.',desc:'เมืองชนเผ่าเชียง ตลาดสีสัน สะพานแขวนสูง เส้นทางระหว่างทางไปจิ่วจ้ายโกว',img:''},
+  {id:'diexi_lake',zh:'叠溪海子',en:'Diexi Lake',th:'ทะเลสาบเตี๋ยซี',cat:'village',lat:31.93,lng:103.67,price:0,hours:'ตลอดวัน',closedSeason:'เปิดตลอดปี',elevation:'2,370 ม.',oxygen:true,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ ระหว่างทางจิ่วจ้ายโกว',desc:'ทะเลสาบสีเขียวมรกตเกิดจากแผ่นดินไหวปี 1933 ภูเขาสะท้อนในน้ำ วิวงดงามระหว่างทางจิ่วจ้ายโกว',img:''},
+  {id:'chongzhou_old',zh:'崇州古城',en:'Chongzhou Old Town',th:'เมืองโบราณชงโจว',cat:'village',lat:30.654,lng:103.672,price:0,hours:'ตลอดวัน',closedSeason:'เปิดตลอดปี',elevation:'490 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ รถบัสจากเฉิงตู 40 กม.',desc:'เมืองโบราณชงโจว ตลาดน้ำ สวนดอกไม้ วัดเจาเจี๋ยซื่อ ห่างเฉิงตู 40 กม. เหมาะครึ่งวัน',img:''},
+  {id:'tianfu_airport',zh:'天府国际机场',en:'Tianfu Intl Airport TFU',th:'สนามบินเทียนฝู่',cat:'transport',lat:30.318,lng:104.445,price:0,hours:'24 ชม.',closedSeason:'เปิดตลอดปี',elevation:'450 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ รถไฟ S11 เข้าเมือง 36 นาที',desc:'สนามบินใหม่ใหญ่สุดภาคตะวันตก เปิดปี 2021 ห่างใจกลางเมือง 51 กม. รถไฟ S11 เข้าเมือง 36 นาที',img:''},
+  {id:'chengdu_east_hsr',zh:'成都东站',en:'Chengdu East HSR Station',th:'สถานีรถไฟความเร็วสูงเฉิงตูตะวันออก',cat:'transport',lat:30.614,lng:104.144,price:0,hours:'05:30–24:00',closedSeason:'เปิดตลอดปี',elevation:'500 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ MRT สาย 2, 7',desc:'สถานี HSR หลักของเฉิงตู · ฉงชิ่ง 1 ชม. · ปักกิ่ง 8.5 ชม. · คุนหมิง 3 ชม. · ซีอาน 3.5 ชม.',img:''},
+  {id:'dazu_rocks',zh:'大足石刻',en:'Dazu Rock Carvings',th:'ผาหินต้าจู่',cat:'temple',lat:29.703,lng:105.713,price:120,hours:'08:30–17:30',closedSeason:'เปิดตลอดปี',elevation:'350 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ รถบัสจากฉงชิ่ง 1.5 ชม.',desc:'รูปสลักหินพุทธ-เต๋า-ขงจื้อ 50,000+ ชิ้น มรดกโลก UNESCO อยู่ที่ฉงชิ่ง ห่างเฉิงตู ~3 ชม.',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'forbidden_city',zh:'故宫',en:'Forbidden City',th:'พระราชวังต้องห้าม',cat:'temple',lat:39.916,lng:116.397,price:60,hours:'08:30–17:00',closedSeason:'ปิดจันทร์',elevation:'44 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ MRT',desc:'พระราชวังเก่าที่ใหญ่ที่สุดในโลก 9,999 ห้อง บ้านจักรพรรดิ 24 องค์',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'disneyland_sh',zh:'上海迪士尼',en:'Shanghai Disneyland',th:'ดิสนีย์แลนด์เซี่ยงไฮ้',cat:'fun',lat:31.14,lng:121.66,price:719,hours:'09:00–21:00',closedSeason:'เปิดตลอดปี',elevation:'5 ม.',oxygen:false,elderly:'✅ ครบ',kids:'✅ สนุกมาก',bus:'✅ MRT',desc:'ดิสนีย์แลนด์ที่ใหญ่ที่สุดในเอเชีย',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+
+  // ══ กว่างโจว (Guangzhou) ══
+  {id:'canton_tower',zh:'广州塔',en:'Canton Tower',th:'หอกว่างโจว',cat:'fun',lat:23.1059,lng:113.3240,price:150,hours:'10:00–23:00',closedSeason:'เปิดตลอดปี',elevation:'600 ม. (ยอด)',oxygen:false,elderly:'✅ ลิฟต์',kids:'✅ ชอบมาก',bus:'✅ MRT สาย 3 สถานี Chigang Tower',desc:'หอส่งสัญญาณทีวีสูง 600 ม. สูงสุดอันดับ 3 ของโลก ชมวิว 360° กลางคืนสวยงาม วงล้อชิงช้าสวรรค์ยอดดอย',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'chimelong',zh:'长隆欢乐世界',en:'Chimelong Paradise',th:'สวนสนุกฉางหลง',cat:'fun',lat:22.9977,lng:113.3280,price:390,hours:'10:00–21:00',closedSeason:'เปิดตลอดปี',elevation:'10 ม.',oxygen:false,elderly:'⚠️ บางเครื่อง',kids:'✅ สนุกมาก',bus:'✅ MRT สาย 7 สถานี Chimelong',desc:'สวนสนุกใหญ่สุดในจีนตอนใต้ สวนสัตว์กลางคืน ซาฟารีพาร์ค โชว์สัตว์ชื่อดัง ต้องไปค้างคืน',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'shamian_island',zh:'沙面岛',en:'Shamian Island',th:'เกาะชาเมี่ยน',cat:'village',lat:23.1083,lng:113.2413,price:0,hours:'ตลอดวัน',closedSeason:'เปิดตลอดปี',elevation:'5 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ MRT สาย 1 สถานี Huangsha',desc:'เกาะเล็กสไตล์โคโลเนียลฝรั่งเศส-อังกฤษ อาคารสีพาสเทล คาเฟ่ริมน้ำ ร้านอาหารบรรยากาศดี เดินเล่นสบาย',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'dim_sum_baietan',zh:'白鹅潭大湾区艺术中心',en:'Baietan Arts Centre',th:'ศูนย์ศิลปะไป๋เอ๋อถาน',cat:'temple',lat:23.1018,lng:113.2162,price:0,hours:'09:00–17:00',closedSeason:'ปิดจันทร์',elevation:'5 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ MRT สาย 8 สถานี Zhongda',desc:'ศูนย์ศิลปะและพิพิธภัณฑ์ใหม่ริมแม่น้ำจูเจียง อาคารทันสมัย นิทรรศการอุตสาหกรรมสร้างสรรค์กวางตุ้ง',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'chen_clan_gd',zh:'陈家祠',en:'Chen Clan Ancestral Hall',th:'ศาลเจ้าตระกูลเฉิน',cat:'temple',lat:23.1271,lng:113.2541,price:10,hours:'08:30–17:30',closedSeason:'เปิดตลอดปี',elevation:'10 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ MRT สาย 1 สถานี Chenjiaci',desc:'ศาลเจ้าโบราณสร้างปี 1894 หลังคาเซรามิกแกะสลัก ไม้ประดับวิจิตร พิพิธภัณฑ์หัตถกรรมกว่างตุ้ง ฟรีเกือบหมด',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'baiyun_mountain',zh:'白云山',en:'Baiyun Mountain',th:'ภูเขาไป๋หยุน',cat:'mountain',lat:23.1956,lng:113.3009,price:5,hours:'06:00–21:00',closedSeason:'เปิดตลอดปี',elevation:'382 ม.',oxygen:false,elderly:'✅ มีกระเช้า',kids:'✅ ได้',bus:'✅ รถบัส 24 จากใจกลางเมือง',desc:'ปอดสีเขียวของกว่างโจว กระเช้าลอยฟ้า สวนดอกไม้ ทะเลสาบ วิ่งออกกำลังกาย ชาวเมืองมาพักผ่อน',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'guangzhou_airport',zh:'白云国际机场',en:'Guangzhou Baiyun Intl Airport',th:'สนามบินนานาชาติไป๋หยุน',cat:'transport',lat:23.3925,lng:113.2988,price:0,hours:'24 ชม.',closedSeason:'เปิดตลอดปี',elevation:'15 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ MRT สาย 3 สถานี Airport North/South',desc:'สนามบินใหญ่สุดในจีนตอนใต้ hub ระหว่างประเทศ บิน BKK–CAN ตรงหลายสายการบิน รถไฟใต้ดินเข้าเมือง 45 นาที',img:''},
+
+  // ══ ปักกิ่ง (Beijing) ══
+  {id:'great_wall_mutianyu',zh:'慕田峪长城',en:'Mutianyu Great Wall',th:'กำแพงเมืองจีน มู่เถียนยู่',cat:'mountain',lat:40.4319,lng:116.5637,price:65,hours:'07:30–18:00',closedSeason:'เปิดตลอดปี',elevation:'600–900 ม.',oxygen:false,elderly:'✅ มีกระเช้า',kids:'✅ สนุก',bus:'✅ รถบัสจากถนนตงจื๋อเหมิน ~2 ชม.',desc:'ส่วนกำแพงเมืองจีนที่สวยและสมบูรณ์ที่สุด ไม่แออัดเท่า Badaling กระเช้าขึ้น–รถสไลด์ลง สนุกมาก',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'summer_palace',zh:'颐和园',en:'Summer Palace',th:'พระราชวังฤดูร้อน',cat:'temple',lat:40.0003,lng:116.2755,price:30,hours:'06:30–18:00',closedSeason:'เปิดตลอดปี',elevation:'60 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ MRT สาย 4 สถานี Beigongmen',desc:'พระราชวังฤดูร้อนจักรพรรดิ ทะเลสาบคุนหมิง เนินฤดูใบไม้ร่วง ระเบียงยาว 728 เมตร มรดกโลก UNESCO',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'temple_heaven',zh:'天坛',en:'Temple of Heaven',th:'วัดสวรรค์',cat:'temple',lat:39.8822,lng:116.4066,price:35,hours:'06:00–22:00',closedSeason:'เปิดตลอดปี',elevation:'44 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ MRT สาย 5 สถานี Tiantandongmen',desc:'วิหารพิธีบูชาสวรรค์ ค.ศ. 1420 จักรพรรดิมาสักการะขอฝนทุกปี สถาปัตย์กลมสีน้ำเงินสุดงดงาม มรดกโลก',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'nanluoguxiang',zh:'南锣鼓巷',en:'Nanluoguxiang',th:'ถนนหนานหลัวกู่เซียง',cat:'village',lat:39.9369,lng:116.4034,price:0,hours:'10:00–23:00',closedSeason:'เปิดตลอดปี',elevation:'44 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ MRT สาย 8 สถานี Nanluoguxiang',desc:'ซอยหูถ่งสายหลัก ร้านกาแฟ สตรีทฟู้ด ของที่ระลึก ชีวิตปักกิ่งดั้งเดิม วัยรุ่นนิยม บรรยากาศสุดฮิป',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'798_art',zh:'798艺术区',en:'798 Art Zone',th:'ย่านศิลปะ 798',cat:'fun',lat:39.9838,lng:116.4997,price:0,hours:'10:00–22:00',closedSeason:'เปิดตลอดปี',elevation:'44 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ รถบัส 401 จากวังฝิ่ง',desc:'โรงงานเก่าสไตล์เยอรมันตะวันออกแปลงเป็นย่านศิลปะ แกลเลอรี กาแฟ Street Art ศิลปินอิสระ เหมาะช้อปของดีไซน์',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'beihai_park',zh:'北海公园',en:'Beihai Park',th:'สวนสาธารณะเป่ยไห่',cat:'park',lat:39.9219,lng:116.3883,price:10,hours:'06:00–21:00',closedSeason:'เปิดตลอดปี',elevation:'44 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ MRT สาย 4 สถานี Xisi',desc:'สวนจักรพรรดิ 1,000 ปี ทะเลสาบ เจดีย์ขาว วัด เรือพาย ดอกบัว ฤดูร้อนสวยมาก ติดพระราชวังต้องห้าม',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'tiananmen',zh:'天安门广场',en:'Tiananmen Square',th:'จัตุรัสเทียนอันเหมิน',cat:'temple',lat:39.9054,lng:116.3976,price:0,hours:'05:00–22:00',closedSeason:'เปิดตลอดปี',elevation:'44 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ MRT สาย 1 สถานี Tiananmen',desc:'จัตุรัสใหญ่สุดในโลก 440,000 ตร.ม. ชมพิธีชักธงรุ่งอรุณสวยมาก ประตูเทียนอันเหมิน-ภาพเหมา ห้องเก็บพระศพ',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+
+  // ══ เฉิงตู (Chengdu) เพิ่มเติม ══
+  {id:'kuanzhai_alley',zh:'宽窄巷子',en:'Kuanzhai Alley',th:'ซอยกว้าง-แคบ กว่าน-จ้าย',cat:'village',lat:30.6696,lng:104.0561,price:0,hours:'09:00–23:00',closedSeason:'เปิดตลอดปี',elevation:'500 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ MRT สาย 4 สถานี Kuan Zhai Alley',desc:'ซอยโบราณราชวงศ์ชิง 3 ซอย: กว้าง แคบ จิง ร้านกาแฟ สตรีทฟู้ด ของหวาน หน้ากากเสฉวน ชาเย็น สุดฮิตปักหมุดไอจี',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'jinli_street',zh:'锦里古街',en:'Jinli Ancient Street',th:'ถนนโบราณจิ้นหลี่',cat:'village',lat:30.6417,lng:104.0479,price:0,hours:'09:00–23:00',closedSeason:'เปิดตลอดปี',elevation:'500 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ รถบัส 55, 82',desc:'ถนนโบราณสมัยสามก๊ก ข้างศาลเจ้าจูเก๋อเลี่ยง อาหารเสฉวนรสเด็ด ของที่ระลึก โชว์ เปลี่ยนหน้ากาก กินบ่ายถึงค่ำ',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'sanxingdui',zh:'三星堆',en:'Sanxingdui Museum',th:'พิพิธภัณฑ์ซานซิงตุ้ย',cat:'temple',lat:31.1316,lng:104.2013,price:72,hours:'08:30–18:00',closedSeason:'เปิดตลอดปี',elevation:'520 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ รถบัสจากเฉิงตู ~40 กม.',desc:'อารยธรรมโบราณ 3,000+ ปี หน้ากากทองคำยักษ์ ต้นไม้สัมฤทธิ์ สิ่งประดิษฐ์ลึกลับ ถือเป็น 1 ใน 20 การค้นพบสำคัญของศตวรรษ',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'chengdu_metro_chunxi',zh:'春熙路',en:'Chunxi Road',th:'ถนนชุนซี สายช้อปปิ้ง',cat:'fun',lat:30.6598,lng:104.0815,price:0,hours:'10:00–22:00',closedSeason:'เปิดตลอดปี',elevation:'500 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ MRT สาย 2/3 สถานี Chunxi Road',desc:'ย่านช้อปปิ้งหลักเฉิงตู IFS SKYONE ห้างหรูนานาชาติ ร้านแฟชั่น สตรีทฟู้ด หมาล่า ไอศกรีม หอยทาก คึกคักทั้งคืน',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'leshan_giant',zh:'乐山大佛',en:'Leshan Giant Buddha',th:'พระพุทธรูปยักษ์เล่อซาน',cat:'temple',lat:29.5459,lng:103.7718,price:90,hours:'07:30–19:00',closedSeason:'เปิดตลอดปี',elevation:'360 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ รถบัสหรือรถไฟจากเฉิงตู ~2 ชม.',desc:'พระพุทธรูปสลักหินใหญ่ที่สุดในโลก สูง 71 ม. สร้างปี ค.ศ. 713 ล่องเรือชม หรือเดินชมจากข้างบน มรดกโลก UNESCO',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'wuhou_shrine',zh:'武侯祠',en:'Wuhou Shrine',th:'ศาลเจ้าจูเก๋อเลี่ยง (อู่โหวฉือ)',cat:'temple',lat:30.6431,lng:104.0469,price:50,hours:'08:00–21:00',closedSeason:'เปิดตลอดปี',elevation:'500 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ รถบัส 55, MRT สาย 3',desc:'ศาลเจ้าขงเบ้ง-หลิวปี่ สมัยสามก๊ก สวนสวยงาม จิตรกรรมฝาผนัง รูปปั้นนักรบ ติดถนนโบราณจิ้นหลี่ ไปคู่กันได้',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+
+  // ══ คุณหมิง (Kunming) ══
+  {id:'stone_forest',zh:'石林',en:'Stone Forest',th:'ป่าหิน ฉือหลิน',cat:'park',lat:24.7716,lng:103.3312,price:175,hours:'07:30–18:00',closedSeason:'เปิดตลอดปี',elevation:'1,750 ม.',oxygen:false,elderly:'✅ มีรถกอล์ฟ',kids:'✅ ได้',bus:'✅ รถบัสจากคุณหมิง ~1.5 ชม.',desc:'ป่าหินปูนกว่า 2.7 แสนไร่ อายุ 270 ล้านปี ยูเนสโก หินแหลมรูปร่างแปลก ตำนานคู่รักชาวอี อาซิมา',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'dianchi_lake',zh:'滇池',en:'Dianchi Lake',th:'ทะเลสาบเตียนฉือ',cat:'village',lat:24.7600,lng:102.7200,price:0,hours:'ตลอดวัน',closedSeason:'เปิดตลอดปี',elevation:'1,886 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ MRT สาย 3 สถานี Haigeng Park',desc:'ทะเลสาบใหญ่สุดในยูนนาน 300 กม² นกนางนวลไซบีเรียหน้าหนาว เรือล่องทะเลสาบ วิวภูเขาตะวันตก พระอาทิตย์ตกสวย',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'western_hills',zh:'西山',en:'Western Hills',th:'ซีซาน (เขาตะวันตก)',cat:'mountain',lat:24.9533,lng:102.6133,price:40,hours:'08:00–18:00',closedSeason:'เปิดตลอดปี',elevation:'2,350 ม.',oxygen:false,elderly:'✅ มีกระเช้า',kids:'✅ ได้',bus:'✅ MRT สาย 3 + กระเช้า',desc:'เขาชมวิวทะเลสาบเตียนฉือ ถ้ำมังกร Dragon Gate แกะสลักหินยาก 72 ปี วิวพาโนรามา กระเช้าข้ามทะเลสาบ',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'yuantong_temple',zh:'圆通寺',en:'Yuantong Temple',th:'วัดหยวนทง',cat:'temple',lat:25.0586,lng:102.7168,price:6,hours:'08:00–17:30',closedSeason:'เปิดตลอดปี',elevation:'1,900 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ MRT สาย 1 สถานี Yuantong Mountain',desc:'วัดพุทธเก่าแก่ 1,200 ปี วัดศักดิ์สิทธิ์สุดของคุณหมิง บ่อปลาเต่ามงคล อาคารสะท้อนในน้ำ สวนดอกไม้ฤดูใบไม้ผลิ',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'flower_market_km',zh:'斗南花卉市场',en:'Dounan Flower Market',th:'ตลาดดอกไม้โต่วหนาน',cat:'village',lat:24.9875,lng:102.8082,price:0,hours:'00:00–24:00',closedSeason:'เปิดตลอดปี',elevation:'1,890 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ MRT สาย 6 สถานี Dounan',desc:'ตลาดดอกไม้ใหญ่สุดในเอเชีย ส่งออกทั้งโลก 50% ดอกไม้ถูกมาก บานสะพรั่งตลอด 24 ชม. ยิ่งดึกยิ่งคึกคัก ไปตอน 23:00–02:00',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'green_lake_km',zh:'翠湖公园',en:'Green Lake Park',th:'สวนสาธารณะทะเลสาบมรกต',cat:'park',lat:25.0551,lng:102.7023,price:0,hours:'06:00–22:00',closedSeason:'เปิดตลอดปี',elevation:'1,890 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ MRT สาย 1 สถานี Cuihu Park',desc:'สวนสาธารณะใจกลางคุณหมิง ทะเลสาบมรกต นกนางนวลฤดูหนาว ร้านกาแฟริมน้ำ วัยรุ่นนักศึกษา คนเล่นดนตรี บรรยากาศดีมาก',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'kunming_airport',zh:'昆明长水机场',en:'Kunming Changshui Intl Airport',th:'สนามบินนานาชาติฉางสุ่ย',cat:'transport',lat:25.1019,lng:102.9291,price:0,hours:'24 ชม.',closedSeason:'เปิดตลอดปี',elevation:'2,103 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ MRT สาย 6 สถานี Changshui Airport',desc:'สนามบิน hub ใต้จีน-เอเชียตะวันออกเฉียงใต้ บิน BKK–KMG ตรงหลายสายการบิน ~1 ชม. 20 นาที รถไฟฟ้าสาย 6 เข้าเมือง 42 นาที',img:''},
+
+  // ══ อู่หลง (Wulong) ══
+  {id:'wulong_tiankeng',zh:'武隆天坑三桥',en:'Wulong Three Natural Bridges',th:'สะพานธรรมชาติสามแห่ง',cat:'park',lat:29.3249,lng:107.7613,price:120,hours:'08:00–18:00',closedSeason:'เปิดตลอดปี',elevation:'1,100–1,400 ม.',oxygen:false,elderly:'✅ มีลิฟต์',kids:'✅ ได้',bus:'✅ รถบัสจากฉงชิ่ง ~3 ชม.',desc:'สะพานหินธรรมชาติสูงใหญ่สามแห่ง มรดกโลก UNESCO เสาหินยักษ์ ช่องเขาลึก เป็นฉากถ่ายภาพยนตร์ Transformers 4',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'wulong_karst',zh:'芙蓉洞',en:'Furong Cave',th:'ถ้ำฝูหรง',cat:'park',lat:29.2840,lng:107.9110,price:120,hours:'08:00–17:30',closedSeason:'เปิดตลอดปี',elevation:'750 ม.',oxygen:false,elderly:'✅ ได้',kids:'✅ ได้',bus:'✅ รถจากอู่หลงเมือง ~30 นาที',desc:'ถ้ำหินปูนขนาดใหญ่ ยาว 2.7 กม. หินงอกย้อยรูปร่างมหัศจรรย์ ผลึกสีขาวบริสุทธิ์ ถ้ำที่สวยงามที่สุดแห่งหนึ่งในจีน',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'wulong_fairy',zh:'仙女山',en:'Fairy Mountain',th:'ภูเขาเซียนหนู่ซาน',cat:'mountain',lat:29.4538,lng:107.7092,price:80,hours:'08:00–18:00',closedSeason:'เปิดตลอดปี',elevation:'2,033 ม.',oxygen:false,elderly:'✅ มีกระเช้า',kids:'✅ ได้',bus:'✅ รถบัสจากเมืองอู่หลง ~1 ชม.',desc:'ทุ่งหญ้าสูง 2,000 ม. หิมะฤดูหนาว ทะเลหมอก ขี่ม้า ลานสกี เที่ยวได้ทั้งปี ฤดูร้อนอากาศเย็นสบาย',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+  {id:'wulong_longshuixia',zh:'龙水峡地缝',en:'Longshuixia Fissure',th:'หุบเขาหินลึกหลงสุ่ยเซีย',cat:'park',lat:29.3550,lng:107.7900,price:80,hours:'08:00–17:30',closedSeason:'เปิดตลอดปี',elevation:'900–1,200 ม.',oxygen:false,elderly:'⚠️ บันไดมาก',kids:'✅ ได้',bus:'✅ รถจากสะพานสามแห่ง ~15 นาที',desc:'รอยแยกหินธรรมชาติลึกกว่า 200 ม. เดินผ่านน้ำตก น้ำซับ หินย้อยริมทาง บรรยากาศเย็นสดชื่น ลึกลับน่าตื่นตาตื่นใจ',img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png'},
+];
+
+/* ══════════════════════════════
+   CITIES
+══════════════════════════════ */
+const cities = [
+  {id:'beijing',zh:'北京',en:'Beijing',th:'ปักกิ่ง',lat:39.9042,lng:116.4074,province:'เขตปกครองพิเศษ',pop:'21.5 ล้านคน',area:'16,410 กม²',climate:'ทวีปภาคพื้นดิน',best:'เม.ย.–มิ.ย. / ก.ย.–ต.ค.',tags:['มรดกโลก','ประวัติศาสตร์','วัฒนธรรม'],img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png',desc:'เมืองหลวงอันยิ่งใหญ่ 3,000 ปี บ้านแห่งกำแพงเมืองจีน พระราชวังต้องห้าม วัฒนธรรมอันลึกซึ้ง',full:'ปักกิ่ง เมืองหลวงสาธารณรัฐประชาชนจีน ศูนย์กลางการเมือง วัฒนธรรม ประวัติศาสตร์ 3,000 ปี มรดกโลก UNESCO 7 แห่ง',
+   attractions:[
+    {icon:'🏯',zh:'故宫',name:'Forbidden City (พระราชวังต้องห้าม)',desc:'พระราชวังเก่าที่ใหญ่ที่สุดในโลก 9,999 ห้อง จักรพรรดิ 24 องค์'},
+    {icon:'🧱',zh:'长城',name:'Great Wall (กำแพงเมืองจีน)',desc:'สัญลักษณ์อมตะแห่งจีน ยาว 21,196 กม. Badaling/Mutianyu เป็นจุดนิยม'},
+    {icon:'🏛️',zh:'天坛',name:'Temple of Heaven (วิหารสวรรค์)',desc:'วิหารโบราณพิธีบูชาสวรรค์ยุคหมิง สถาปัตย์วงกลม 3 ชั้น'},
+    {icon:'⛩️',zh:'颐和园',name:'Summer Palace (พระราชวังฤดูร้อน)',desc:'พระราชวังหรูหราริมทะเลสาบ Kunming ใหญ่ที่สุดในจีน'},
+    {icon:'🦁',zh:'北京动物园',name:'Beijing Zoo (สวนสัตว์ปักกิ่ง)',desc:'สวนสัตว์เก่าแก่ที่สุดในจีน สัตว์กว่า 450 ชนิด แพนด้ายักษ์'},
+    {icon:'🎭',zh:'798艺术区',name:'798 Art District',desc:'ย่านศิลปะร่วมสมัย โรงงานเก่าเปลี่ยนเป็นแกลเลอรี คาเฟ่ชิค'},
+    {icon:'🏮',zh:'南锣鼓巷',name:'Nanluoguxiang Hutong',desc:'ซอยโบราณยุคหยวน ร้านกาแฟ บาร์ ของฝาก บรรยากาศวินเทจ'},
+    {icon:'🌿',zh:'北海公园',name:'Beihai Park',desc:'สวนสาธารณะเก่าแก่ 1,000 ปี เจดีย์ขาว ทะเลสาบกลางเมือง'},
+   ],
+   transport:{air:'Capital (PEK) + Daxing (PKX)',rail:'Beijing South · HSR ทั่วจีน',metro:'27 สาย 459 สถานี · 05:00–23:30'}},
+
+  {id:'shanghai',zh:'上海',en:'Shanghai',th:'เซี่ยงไฮ้',lat:31.2304,lng:121.4737,province:'เขตปกครองพิเศษ',pop:'24.9 ล้านคน',area:'6,340 กม²',climate:'กึ่งร้อนชื้น',best:'มี.ค.–พ.ค. / ก.ย.–พ.ย.',tags:['Modern','ธุรกิจ','ริมน้ำ'],img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png',desc:'มหานครแห่งอนาคต ตึกระฟ้าสะท้อนแม่น้ำหวงผู่ The Bund สุดคลาสสิก ดิสนีย์แลนด์',full:'เซี่ยงไฮ้คือเมืองที่ทันสมัยที่สุดของจีน ศูนย์กลางการเงิน แฟชั่น นวัตกรรมระดับโลก',
+   attractions:[
+    {icon:'🌆',zh:'外滩',name:'The Bund (ย่านวาย)',desc:'ถนนริมน้ำสถาปัตย์โคโลเนียล 52 หลัง วิวตึกระฟ้า Pudong สวยที่สุด'},
+    {icon:'🗼',zh:'东方明珠',name:'Oriental Pearl Tower',desc:'หอคอยสัญลักษณ์ สูง 468 ม. ชั้น Sky Walk แก้วใสน่าหวาดเสียว'},
+    {icon:'🎡',zh:'迪士尼乐园',name:'Shanghai Disneyland',desc:'ดิสนีย์แลนด์ที่ใหญ่สุดในเอเชีย ปราสาทสวยงาม Fantasyland ใหม่'},
+    {icon:'🛍️',zh:'南京路',name:'Nanjing Road (ถนนนานกิง)',desc:'ถนนช้อปปิ้งยาวสุดในจีน 5.5 กม. แบรนด์ทั่วโลก'},
+    {icon:'🌸',zh:'豫园',name:'Yu Garden (สวนหยู)',desc:'สวนจีนคลาสสิกยุคราชวงศ์หมิง หินแปลก สระ ศาลา บรรยากาศโบราณ'},
+    {icon:'🏙️',zh:'上海中心',name:'Shanghai Tower (ตึกเซี่ยงไฮ้)',desc:'ตึกสูง 632 ม. อันดับ 2 ของโลก หมุนสปิรัล ชั้น 118 ชมวิว 360°'},
+    {icon:'🎨',zh:'田子坊',name:'Tianzifang (ถนนเทียนจื่อฝาง)',desc:'ย่านศิลปะในซอยเก่า คาเฟ่ ร้านออกแบบ ถ่ายรูปสวย'},
+    {icon:'🛶',zh:'朱家角',name:'Zhujiajiao Water Town',desc:'เมืองน้ำโบราณ 1,700 ปี ล่องเรือ สะพานโบราณ ห่างเซี่ยงไฮ้ 1 ชม.'},
+   ],
+   transport:{air:'Pudong (PVG) + Hongqiao (SHA)',rail:'Hongqiao · Maglev 7 นาที',metro:'20 สาย 508 สถานี · 05:30–23:00'}},
+
+  {id:'chengdu',zh:'成都',en:'Chengdu',th:'เฉิงตู',lat:30.5728,lng:104.0668,province:'มณฑลเสฉวน',pop:'21.2 ล้านคน',area:'14,335 กม²',climate:'กึ่งร้อนชื้น',best:'มี.ค.–มิ.ย. / ก.ย.–พ.ย.',tags:['แพนด้า','อุทยาน','ธรรมชาติ'],img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png',desc:'เมืองชิลที่สุดในจีน แพนด้า อาหารเสฉวนเผ็ด ประตูสู่อุทยานมรดกโลกและภูเขาหิมะ',full:'เฉิงตู เมืองหลวงมณฑลเสฉวน ศูนย์กลางแพนด้ายักษ์ ต้นตำรับอาหารเสฉวน ประตูสู่จิ่วจ้ายโกว หวงหลง สี่สาวน้อย ง๊อไบ๊ ซวงเฉียวโกว ต๋ากู่ธารน้ำแข็ง และสนามบินใหม่เทียนฝู่ (TFU) ที่ใหญ่ที่สุดในภาคตะวันตกของจีน',
+   attractions:[
+    {icon:'🐼',zh:'大熊猫繁育研究基地',name:'Giant Panda Breeding Center (ศูนย์อนุรักษ์แพนด้า)',desc:'ศูนย์อนุรักษ์และเพาะพันธุ์แพนด้ายักษ์ กว่า 200 ตัว ดูตอนเช้า 07:30–09:00 สนุกที่สุด แพนด้าน้อยน่ารัก'},
+    {icon:'🤳',zh:'都江堰熊猫乐园',name:'Dujiangyan Panda Base (แพนด้าเซลฟี่)',desc:'ที่เดียวในโลกที่จ่ายเงินอุ้มแพนด้าถ่ายรูปได้อย่างถูกกฎหมาย ต้องจองล่วงหน้า ค่าบริการ ¥1,800+'},
+    {icon:'🌊',zh:'九寨沟',name:'Jiuzhaigou (จิ่วจ้ายโกว)',desc:'ทะเลสาบหลากสีมรดกโลก UNESCO ห่าง 9 ชม. หรือบินสนามบินจิ่วจ้าย-หวงหลง 45 นาที เปิด เม.ย.–พ.ย.'},
+    {icon:'💛',zh:'黄龙',name:'Huanglong (หวงหลง)',desc:'ลำธารหินปูนสีทองมรดกโลก UNESCO ระดับ 3,100–3,578 ม. มักไปคู่กับจิ่วจ้ายโกว ระวัง Altitude'},
+    {icon:'🚉',zh:'黄龙九寨机场/车站',name:'สนามบิน-สถานีหวงหลงจิ่วจ้าย',desc:'สนามบินจิ่วจ้าย หวงหลง (JZH) ระดับ 3,437 ม. สูงสุดในจีน · รถบัสจากเฉิงตูใช้เวลา 8–10 ชม. ผ่านเม่าเสี้ยน'},
+    {icon:'⛰️',zh:'四姑娘山',name:'Siguniang / Shuangqiaogou (สี่สาวน้อย / ซวงเฉียวโกว)',desc:'ยอดเขาหิมะสูงสุด 6,250 ม. หุบเขาซวงเฉียวโกวสวยงาม เดินป่าชมทุ่งดอกไม้ ห่างเฉิงตู 5 ชม.'},
+    {icon:'🏔️',zh:'西岭雪山',name:'Xiling Snow Mountain (ภูเขาหิมะซีหลิง)',desc:'ภูเขาหิมะใกล้เฉิงตูที่สุด ห่างเพียง 95 กม. สกี รถกระเช้า วิวหิมะสวย เหมาะวันเดย์ทริป'},
+    {icon:'🌿',zh:'毕棚沟',name:'Bipeng Valley (ปี้เผิงโกว)',desc:'หุบเขาใบไม้เหลือง-แดงสวยที่สุดในเสฉวน ฤดูใบไม้ร่วง ต.ค. ทุ่งหญ้า ทะเลสาบ สายน้ำ ห่าง 5 ชม.'},
+    {icon:'🏞️',zh:'理县古尔沟',name:'Lixian / Guer Valley (ลี่เสี้ยน / กู่เอ่อโกว)',desc:'หุบเขาสุดสวยในอำเภอลี่เสี้ยน น้ำพุร้อนกู่เอ่อโกว บรรยากาศชนเผ่าทิเบต เส้นทางสู่จิ่วจ้ายโกว'},
+    {icon:'🧊',zh:'达古冰川',name:'Dagu Glacier (ธารน้ำแข็งต๋ากู่)',desc:'ธารน้ำแข็งที่ใกล้เฉิงตูที่สุด กระเช้าสูง 4,860 ม. หิมะขาวโพลน วิวสวยงาม ห่างเฉิงตู ~6 ชม.'},
+    {icon:'🏘️',zh:'黑水扎尕然',name:'Heishui Zhagana (เฮ่ยสุ่ยเจียหรง)',desc:'หมู่บ้านหินทิเบตโบราณในหุบเขาเฮ่ยสุ่ย บ้านหินสูงชัน วิวภูเขาตระการตา ยังไม่เป็นที่รู้จักมาก'},
+    {icon:'🛕',zh:'理塘',name:'Litang / Lixiaolu (หลีเสียวลู่)',desc:'ทุ่งหญ้าสูงระดับ 4,000+ ม. วิถีชีวิตคาวบอยทิเบต เส้นทาง G318 สายโรแมนติก เมืองสูงสุดในโลก'},
+    {icon:'🌸',zh:'莲宝叶则',name:'Lianbaoyeze (เหลี่ยนเป่าเย่เจ้อ)',desc:'ทะเลสาบและทุ่งหญ้าสวยงามบนที่ราบสูง 3,500–4,000 ม. เงียบสงบ นักท่องเที่ยวน้อย ⚠️ ต้องมี Permit'},
+    {icon:'🏔️',zh:'瓦屋山',name:'Wawu Mountain (ภูเขาวาวู่)',desc:'ภูเขายอดแบนราบ "โต๊ะยักษ์" สูง 2,830 ม. ทะเลหมอก ดอกไม้ป่า นกหายาก ห่างเฉิงตู 3 ชม.'},
+    {icon:'⛩️',zh:'峨眉山',name:'Mt. Emei (ง๊อไบ๊)',desc:'ภูเขาศักดิ์สิทธิ์พุทธจีน 1 ใน 4 ภูเขาศักดิ์สิทธิ์ วัดโบราณ ลิงป่า กระเช้า ยอดสูง 3,099 ม.'},
+    {icon:'💧',zh:'都江堰',name:'Dujiangyan (ตูเจียงเยี่ยน)',desc:'ระบบชลประทาน 2,300 ปี มรดกโลก UNESCO ใกล้ Panda Base เซลฟี่ ห่างเฉิงตูเพียง 1 ชม.'},
+    {icon:'🏙️',zh:'茂县',name:'Maoxian (เม่าเสี้ยน)',desc:'เมืองชนเผ่าเชียง ตลาดสีสัน เส้นทางหุบเขาแม่น้ำหมิน ผ่านระหว่างทางไปจิ่วจ้ายโกว สะพานแขวนสูง'},
+    {icon:'🏛️',zh:'昭觉寺/崇州',name:'Chongzhou / Zhaojuesi (เมืองโบราณชงโจว)',desc:'เมืองโบราณชงโจว วัดเจาเจี๋ยซื่อ ตลาดน้ำ สวนดอกไม้ ห่างเฉิงตู 40 กม. เหมาะครึ่งวัน'},
+    {icon:'💎',zh:'叠溪海子',name:'Diexihaizi (ทะเลสาบเตี๋ยซี)',desc:'ทะเลสาบสีเขียวมรกตเกิดจากแผ่นดินไหวปี 1933 ภูเขาสะท้อนในน้ำ วิวงดงาม ระหว่างทางจิ่วจ้ายโกว'},
+    {icon:'✈️',zh:'天府国际机场',name:'Tianfu International Airport TFU (สนามบินเทียนฝู่)',desc:'สนามบินใหม่ใหญ่สุดภาคตะวันตก เปิด 2021 ห่างใจกลาง 51 กม. รถไฟ S11 เข้าเมือง 36 นาที'},
+    {icon:'🚄',zh:'成都东站/天府站',name:'Chengdu East / Tianfu HSR Station (สถานีรถไฟความเร็วสูง)',desc:'สถานี Chengdu East (成都东) หลักของ HSR · Tianfu Station (天府) สถานีใหม่ใต้สนามบิน TFU · ฉงชิ่ง 1 ชม. ปักกิ่ง 8.5 ชม. คุนหมิง 3 ชม.'},
+    {icon:'🪨',zh:'大足石刻',name:'Dazu Rock Carvings (ผาหินต้าจู่)',desc:'รูปสลักหินพุทธ-เต๋า-유教กว่า 50,000 ชิ้น มรดกโลก UNESCO อยู่ที่ฉงชิ่ง ห่างเฉิงตู ~3 ชม.'},
+    {icon:'🌆',zh:'重庆',name:'Chongqing (ฉงชิ่ง)',desc:'มหานคร Cyberpunk หงยาต้ง ไฟนีออน หม้อไฟ รถไฟทะลุตึก Liziba ห่างเฉิงตูโดย HSR เพียง 1 ชม.'},
+    {icon:'🍜',zh:'锦里/宽窄巷子',name:'Jinli & Kuanzhai Alley (จิ่นหลี่ / กว้านจ้ายเซียงจื่อ)',desc:'ย่านโบราณ 2 แห่งในใจกลางเฉิงตู หม้อไฟเสฉวน ขนมท้องถิ่น ตลาดกลางคืน บรรยากาศสุด Chill'},
+   ],
+   transport:{air:'Tianfu TFU (ใหม่-หลัก) + Shuangliu CTU (เก่า) · รถไฟ S11 จาก TFU 36 นาที',rail:'Chengdu East (成都东) · HSR ฉงชิ่ง 1 ชม. · ปักกิ่ง 8.5 ชม. · คุนหมิง 3 ชม. · ซีอาน 3.5 ชม.',metro:'13 สาย 219 สถานี · 06:30–23:00 · สาย 10 เชื่อม CTU · สาย S11 เชื่อม TFU'}},
+
+  {id:'xian',zh:'西安',en:"Xi'an",th:'ซีอาน',lat:34.3416,lng:108.9398,province:'มณฑลส่านซี',pop:'13.1 ล้านคน',area:'10,752 กม²',climate:'ทวีปกึ่งแห้ง',best:'มี.ค.–พ.ค. / ก.ย.–พ.ย.',tags:['ประวัติศาสตร์','สายไหม','สุสาน'],img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png',desc:'เมืองหลวง 13 ราชวงศ์ ต้นกำเนิดเส้นทางสายไหม ทหารดินเผา',full:'ซีอาน Chang\'an อดีตเมืองหลวงยิ่งใหญ่สุดในโลกยุคราชวงศ์ถัง',
+   attractions:[
+    {icon:'⚔️',zh:'兵马俑',name:'Terracotta Army (ทหารดินเผา)',desc:'ทหารดินเผา 8,000 ตัว มรดกโลก UNESCO 1987 ห้ามถ่ายในพิท'},
+    {icon:'🏯',zh:'西安城墙',name:"Xi'an City Wall (กำแพงเมือง)",desc:'กำแพงเมืองสมบูรณ์สุดในจีน ยาว 14 กม. ปั่นจักรยานได้'},
+    {icon:'🕌',zh:'清真大寺',name:'Great Mosque (มัสยิดใหญ่)',desc:'มัสยิดจีน-อิสลาม อายุ 1,300 ปี สถาปัตย์จีนแท้'},
+    {icon:'🛕',zh:'大雁塔',name:'Big Wild Goose Pagoda (ต้าเยี่ยนถ่า)',desc:'เจดีย์หินยุคถัง 7 ชั้น ที่พำนักพระถัมสำซัง'},
+    {icon:'🏛️',zh:'华清宫',name:'Huaqing Palace (หวาชิงกง)',desc:'พระราชวังอาบน้ำร้อน ตำนานนางสนมหยาง เหตุการณ์ Xi\'an Incident'},
+    {icon:'🍖',zh:'回民街',name:'Muslim Quarter (ย่านมุสลิม)',desc:'ถนนอาหารชาวฮุย หรงหยาง ไข่ย่าง ขนมทอด ลิ้มรสของจีนมุสลิม'},
+    {icon:'🏺',zh:'陕西历史博物馆',name:'Shaanxi History Museum',desc:'พิพิธภัณฑ์ประวัติศาสตร์ฟรี! โบราณวัตถุกว่า 370,000 ชิ้น'},
+   ],
+   transport:{air:'Xianyang (XIY)',rail:"Xi'an North · HSR ปักกิ่ง 4.5 ชม.",metro:'8 สาย 153 สถานี · 06:00–23:00'}},
+
+  {id:'guilin',zh:'桂林',en:'Guilin',th:'กุ้ยหลิน',lat:25.2736,lng:110.2907,province:'มณฑลกวางสี',pop:'5.5 ล้านคน',area:'27,809 กม²',climate:'กึ่งร้อนชื้น',best:'เม.ย.–ต.ค.',tags:['ธรรมชาติ','แม่น้ำ','ภูเขาหิน'],img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png',desc:'ทิวทัศน์งดงามที่สุดของจีน ภูเขาหินปูนสะท้อนแม่น้ำหลี่ราวภาพวาดมีชีวิต',full:'กุ้ยหลิน "กุ้ยหลินทัศนียภาพงดงามที่สุดในแผ่นดินจีน" ทิวทัศน์ที่ปรากฏบนธนบัตร 20 หยวน',
+   attractions:[
+    {icon:'🛶',zh:'漓江',name:'Li River Cruise (ล่องเรือแม่น้ำหลี่)',desc:'ล่องเรือ 4 ชม. Guilin→Yangshuo วิวสวยสุดในจีน'},
+    {icon:'🌾',zh:'龙脊梯田',name:'Longji Rice Terraces (นาขั้นบันได)',desc:'นาขั้นบันไดมังกร 600 ปี ชนเผ่าหยาว บน 1,100 ม.'},
+    {icon:'🏖️',zh:'阳朔',name:'Yangshuo (หยางซั่ว)',desc:'เมืองน้อยโรแมนติกริมน้ำ ปั่นจักรยาน คาเฟ่วิวภูเขา'},
+    {icon:'🕳️',zh:'芦笛岩',name:'Reed Flute Cave (ถ้ำนกเป่าลม)',desc:'ถ้ำหินงอกย้อยอายุ 180 ล้านปี แสงไฟสีสัน'},
+    {icon:'🐘',zh:'象鼻山',name:'Elephant Trunk Hill (ภูเขาหัวช้าง)',desc:'ภูเขาหินรูปช้างดูดน้ำ สัญลักษณ์กุ้ยหลิน ถ่ายรูปจากเรือ'},
+   ],
+   transport:{air:'Guilin Liangjiang (KWL)',rail:'Guilin North · HSR กว่างโจว 2 ชม.',metro:'2 สาย · 06:30–22:30'}},
+
+  {id:'lijiang',zh:'丽江',en:'Lijiang',th:'ลี่เจียง',lat:26.8721,lng:100.2299,province:'มณฑลยูนนาน',pop:'1.3 ล้านคน',area:'20,600 กม²',climate:'เมืองสูงเย็น',best:'มี.ค.–ต.ค.',tags:['เมืองโบราณ','ชนเผ่า','หิมะ'],img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png',desc:'เมืองโบราณนาซีมรดกโลก ภูเขาหิมะหยกมังกร หุบเขาเสือกระโจน',full:'ลี่เจียงระดับ 2,400 ม. เมืองโบราณนาซี UNESCO 1997 ชนเผ่านาซีใช้ภาษาดงปา',
+   attractions:[
+    {icon:'🏘️',zh:'丽江古城',name:'Lijiang Old Town (กู่เฉิง)',desc:'เมืองโบราณ UNESCO คูน้ำ ถนนหิน ร้านบาร์ ดนตรีนาซี'},
+    {icon:'🏔️',zh:'玉龙雪山',name:'Jade Dragon Snow Mountain (หยกมังกร)',desc:'ยอดเขาหิมะ 5,596 ม. กระเช้าถึง 4,506 ม. ทุ่งหิมะขาว'},
+    {icon:'💙',zh:'蓝月谷',name:'Blue Moon Valley (หุบเขาพระจันทร์สีน้ำเงิน)',desc:'ทะเลสาบสีฟ้าเทอร์ควอยซ์สวยตระการตา เชิงเขา Jade Dragon'},
+    {icon:'🏡',zh:'束河古镇',name:'Shuhe Ancient Town (ชูเหอ)',desc:'เมืองโบราณเล็กกว่าลี่เจียง เงียบสงบ ถ่ายรูปสวย แมวเยอะมาก'},
+    {icon:'🌸',zh:'白沙古镇',name:'Baisha Ancient Town (ไป๋ซา)',desc:'หมู่บ้านโบราณนาซีดั้งเดิม จิตรกรรมฝาผนังโบราณ หมอดร.โจ'},
+    {icon:'🐯',zh:'虎跳峡',name:'Tiger Leaping Gorge (เสือกระโจน)',desc:'หุบเขาลึก 3,900 ม. แม่น้ำแยงซีกั้นหิน เดินป่า 2 วัน'},
+    {icon:'🌊',zh:'泸沽湖',name:'Lugu Lake (ทะเลสาบลู่กู่)',desc:'ทะเลสาบชนเผ่า Mosuo "มาตุสังคม" เรือสุดหรู เกาะกลางน้ำ'},
+    {icon:'🐉',zh:'黑龙潭',name:'Black Dragon Pool (สระมังกรดำ)',desc:'สระน้ำกลางสวน วิวภูเขาหิมะ Jade Dragon สวยสุด ฟรีเข้าชม'},
+    {icon:'🎭',zh:'印象丽江',name:'Impression Lijiang Show',desc:'โชว์กายกรรมกลางแจ้ง 500 นักแสดง ฉากภูเขาหิมะจริง ตื่นตา'},
+   ],
+   transport:{air:'Lijiang Sanyi (LJG) · 50 นาที',rail:'ยังไม่มี HSR · รถบัส 8 ชม.',metro:'ไม่มี · E-Bus ภายในเมือง'}},
+
+  {id:'chongqing',zh:'重庆',en:'Chongqing',th:'ฉงชิ่ง',lat:29.5630,lng:106.5516,province:'เขตปกครองพิเศษ',pop:'32.0 ล้านคน',area:'82,400 กม²',climate:'กึ่งร้อนชื้น',best:'มี.ค.–มิ.ย.',tags:['Cyberpunk','หม้อไฟ','แม่น้ำ'],img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png',desc:'มหานครภูเขา Cyberpunk รถไฟฟ้าลอดตึก ไฟนีออนยามค่ำ หม้อไฟ',full:'ฉงชิ่งเมืองใหญ่สุดในจีน รถไฟฟ้าสาย 2 วิ่งทะลุกลางอาคาร Liziba',
+   attractions:[
+    {icon:'🏮',zh:'洪崖洞',name:'Hongya Cave (หงยาต้ง)',desc:'อาคารริมหน้าผา 11 ชั้น ไฟนีออนสีแดง กลางคืนสวยงามสุดๆ'},
+    {icon:'🏙️',zh:'磁器口',name:'Ciqikou Ancient Town (ชี่ชี่โข่ว)',desc:'เมืองโบราณ 1,700 ปีริมแม่น้ำ ขนมฝาง ชาสด ของกินเยอะ'},
+    {icon:'🚇',zh:'李子坝站',name:'Liziba Light Rail Station',desc:'สถานีรถไฟฟ้าวิ่งทะลุกลางตึ! จุดถ่ายรูป Cyberpunk สุดชิค'},
+    {icon:'🪨',zh:'大足石刻',name:'Dazu Rock Carvings (ต้าจู่)',desc:'รูปสลักหิน 50,000 รูป มรดกโลก UNESCO ห่าง 3 ชม.'},
+    {icon:'🏛️',zh:'三峡博物馆',name:'Three Gorges Museum',desc:'พิพิธภัณฑ์สามผาอลังการ โบราณวัตถุ Chongqing ฟรีเข้าชม'},
+   ],
+   transport:{air:'Jiangbei (CKG) · 130 เมืองทั่วโลก',rail:'Chongqing North · HSR เฉิงตู 1 ชม.',metro:'10 สาย 300+ สถานี · 06:30–23:00'}},
+
+  {id:'hangzhou',zh:'杭州',en:'Hangzhou',th:'หังโจว',lat:30.2741,lng:120.1551,province:'มณฑลเจ้อเจียง',pop:'12.2 ล้านคน',area:'16,596 กม²',climate:'กึ่งร้อนชื้น',best:'มี.ค.–พ.ค. / ก.ย.–พ.ย.',tags:['ทะเลสาบ','ชา','สวน'],img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png',desc:'ทะเลสาบซีหูโรแมนติก ชาหลงจิ่งชั้นเลิศ เมืองสวรรค์บนดิน',full:'หังโจว "สวรรค์บนดิน" ทะเลสาบซีหู UNESCO คลองใหญ่ บ้าน Alibaba Jack Ma',
+   attractions:[
+    {icon:'🏞️',zh:'西湖',name:'West Lake (ซีหู)',desc:'ทะเลสาบมรดกโลก UNESCO เดินเล่น ล่องเรือ ชมพระอาทิตย์ตก'},
+    {icon:'🍵',zh:'龙井村',name:'Longjing Tea Village (หลงจิ่ง)',desc:'ไร่ชาหลงจิ่งชั้น 1 ชิมชาสดจากต้น บรรยากาศชนบทสุดงาม'},
+    {icon:'🏛️',zh:'灵隐寺',name:'Lingyin Temple (หลิงอิ๋น)',desc:'วัดพุทธ 1,600 ปี รูปสลักหิน ป่าเก่าแก่ น้ำตก'},
+    {icon:'🌉',zh:'断桥残雪',name:'Broken Bridge (ตวนเฉียว)',desc:'สะพานตำนานงูขาว จุดถ่ายรูปสวยที่สุดยามหิมะตก'},
+    {icon:'🛕',zh:'雷峰塔',name:'Leifeng Pagoda (เหลยเฟิง)',desc:'เจดีย์ 5 ชั้นสีทองริมทะเลสาบ ตำนานนางพญางูขาว'},
+   ],
+   transport:{air:'Xiaoshan (HGH)',rail:'Hangzhou East · HSR เซี่ยงไฮ้ 45 นาที',metro:'12 สาย 286 สถานี · 06:00–23:00'}},
+
+  {id:'kunming',zh:'昆明',en:'Kunming',th:'คุนหมิง',lat:25.0389,lng:102.7183,province:'มณฑลยูนนาน',pop:'8.5 ล้านคน',area:'21,011 กม²',climate:'ฤดูใบไม้ผลิตลอดปี',best:'ตลอดทั้งปี',tags:['ยูนนาน','ดอกไม้','ชนเผ่า'],img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png',desc:'เมืองฤดูใบไม้ผลิตลอดปี ดอกไม้บานทุกวัน ป่าหินหลินซาง ประตูยูนนาน',full:'คุนหมิงอากาศดีตลอดปี 15–25°C ประตูสู่ดาลี่ ลี่เจียง แชงกรีล่า',
+   attractions:[
+    {icon:'🪨',zh:'石林',name:'Stone Forest (ป่าหิน)',desc:'ป่าหินปูนพิสดาร 270 ล้านปี มรดกโลก UNESCO ห่าง 90 กม.'},
+    {icon:'🌿',zh:'翠湖公园',name:'Green Lake Park (ทะเลสาบเขียว)',desc:'สวนสาธารณะกลางเมือง นกนางนวลไซบีเรียฤดูหนาว ฟรี'},
+    {icon:'🌊',zh:'滇池',name:'Dianchi Lake (เตียนฉือ)',desc:'ทะเลสาบน้ำจืดใหญ่สุดยูนนาน ชมพระอาทิตย์ตก'},
+    {icon:'⛰️',zh:'西山',name:'Western Hills (ซีซาน)',desc:'ภูเขาทิศตะวันตกวิวทะเลสาบ Dianchi หน้าผาโค้งรูปนอนหลับ'},
+    {icon:'🛕',zh:'圆通寺',name:'Yuantong Temple (หยวนทง)',desc:'วัดพุทธที่เก่าแก่ที่สุดในคุนหมิง 1,200 ปี บ่อน้ำปลาคาร์พ'},
+    {icon:'🕳️',zh:'九乡溶洞',name:'Jiuxiang Cave (ถ้ำจิ่วเซียง)',desc:'ถ้ำหินปูนขนาดยักษ์ 4 ชั้น น้ำตกใต้ดิน เดินสะพานแก้ว'},
+    {icon:'🔴',zh:'东川红土地',name:'Dongchuan Red Land (แดนดินแดง)',desc:'ที่ราบดินแดงสวยงามไม่เหมือนใคร ดีที่สุดช่วงพฤศจิกายน–มกราคม'},
+   ],
+   transport:{air:'Changshui (KMG) · 60+ เส้นทาง',rail:'Kunming South · HSR เฉิงตู 3 ชม.',metro:'6 สาย 133 สถานี · 06:30–23:00'}},
+
+  {id:'dali',zh:'大理',en:'Dali',th:'ต้าหลี่',lat:25.6065,lng:100.2676,province:'มณฑลยูนนาน',pop:'3.7 ล้านคน',area:'29,459 กม²',climate:'ฤดูใบไม้ผลิตลอดปี',best:'มี.ค.–ต.ค.',tags:['เมืองโบราณ','ทะเลสาบ','ชนเผ่าไป๋'],img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png',desc:'เมืองโบราณไป๋ ภูเขาจางซาน ทะเลสาบเอ๋อร์ไห่ บรรยากาศโบฮีเมียน',full:'ต้าหลี่ อดีตราชธานีน่านเจ้า ชนเผ่าไป๋ ภูเขาจางซาน 19 ยอด ทะเลสาบเอ๋อร์ไห่',
+   attractions:[
+    {icon:'🛕',zh:'崇圣寺三塔',name:'Three Pagodas (สามเจดีย์)',desc:'สามเจดีย์อายุ 1,000 ปี สะท้อนในน้ำงดงาม สัญลักษณ์ต้าหลี่'},
+    {icon:'🌊',zh:'洱海',name:'Erhai Lake (เอ๋อร์ไห่)',desc:'ทะเลสาบรูปหูช้าง น้ำใส ล่องเรือ ปั่นจักรยานรอบ 128 กม.'},
+    {icon:'🏯',zh:'大理古城',name:'Dali Old Town (กู่เฉิง)',desc:'กำแพงเมืองโบราณ ย่านไป๋ ร้านแฮนด์เมด คาเฟ่น่ารัก'},
+    {icon:'🏔️',zh:'苍山',name:'Cangshan Mountain (จางซาน)',desc:'ภูเขา 19 ยอด หิมะขาว กระเช้า ป่าน้ำตก ดอกไม้นานาพันธุ์'},
+    {icon:'🌺',zh:'喜洲古镇',name:'Xizhou Ancient Town (ซีโจว)',desc:'หมู่บ้านโบราณไป๋ดั้งเดิม สถาปัตย์แบบดั้งเดิม ขนมไป๋ปาเจิน'},
+    {icon:'🌅',zh:'双廊古镇',name:'Shuanglang Village (ซวงหลาง)',desc:'หมู่บ้านศิลปินริมทะเลสาบ ถ่ายรูปสวยงาม ร้านอาหารวิวน้ำ'},
+   ],
+   transport:{air:'Dali (DLU) · ห่าง 13 กม.',rail:'HSR Dali · คุนหมิง 1.5 ชม. ลี่เจียง 1 ชม.',metro:'ไม่มี · E-Bus + รถตุ๊กตุ๊ก'}},
+
+  {id:'guangzhou',zh:'广州',en:'Guangzhou',th:'กว่างโจว',lat:23.1291,lng:113.2644,province:'มณฑลกวางตุ้ง',pop:'18.7 ล้านคน',area:'7,434 กม²',climate:'กึ่งร้อนชื้น',best:'ต.ค.–เม.ย.',tags:['ฤดูใบไม้ร่วง','อาหาร','ท่องเที่ยว'],img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png',desc:'เมืองท่าประวัติศาสตร์ หอ Canton ย่านโคโลเนียล ชามล่า ศูนย์กลางกวางตุ้ง',full:'กว่างโจวหรือกวางตุ้ง เมืองใหญ่อันดับ 3 ของจีน ประตูสู่กวางตุ้ง ศูนย์กลางเทคโนโลยีและการค้า',
+   attractions:[
+    {icon:'🗼',zh:'广州塔',name:'Canton Tower (หอแคนตัน)',desc:'หอคอยสูง 600 ม. สูงสุดในจีน บิดสปิรัล มีรถไฟเหาะรอบยอด'},
+    {icon:'🏝️',zh:'沙面岛',name:'Shamian Island (เกาะซาเมี่ยน)',desc:'เกาะโคโลเนียลยุโรป 19 ชาติ ต้นไม้ใหญ่ สถาปัตย์ฝรั่งเศส-อังกฤษ'},
+    {icon:'🏛️',zh:'陈家祠',name:'Chen Clan Ancestral Hall',desc:'ศาลบรรพบุรุษตระกูลเฉิน งานแกะสลักไม้-หิน-เซรามิก ละเอียดสุดๆ'},
+    {icon:'⛰️',zh:'白云山',name:'Baiyun Mountain (ภูเขาไป๋ยุน)',desc:'ภูเขาป่าสีเขียวกลางเมือง กระเช้า ทะเลสาบน้ำตก วิวกว่างโจว'},
+    {icon:'🦁',zh:'长隆野生动物世界',name:'Chimelong Safari Park',desc:'สวนสัตว์ Safari ใหญ่สุดในจีน ขับรถผ่านสัตว์ป่า นอนในรีสอร์ต'},
+    {icon:'🛍️',zh:'北京路',name:'Beijing Road (ถนนปักกิ่ง)',desc:'ถนนช้อปปิ้งกว่าง 1,000 ปี ขุดพบถนนโบราณใต้ดิน'},
+    {icon:'🏪',zh:'上下九',name:'Shangxiajiu Pedestrian Street',desc:'ถนนเดินเท้าประวัติศาสตร์ อาหารดิมซัม ของฝาก บรรยากาศเก่า'},
+   ],
+   transport:{air:'Baiyun (CAN) · Hub ระหว่างประเทศ',rail:'Guangzhou South · HSR เซี่ยงไฮ้ 3.5 ชม.',metro:'16 สาย 302 สถานี · 06:00–23:30'}},
+
+  {id:'sanya',zh:'三亚',en:'Sanya',th:'ซานย่า',lat:18.2528,lng:109.5119,province:'มณฑลไหหลำ',pop:'1.0 ล้านคน',area:'1,921 กม²',climate:'ร้อนชื้นเขตร้อน',best:'ต.ค.–พ.ค.',tags:['ทะเล','รีสอร์ต','ดำน้ำ'],img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png',desc:'ฮาวายแห่งจีน ชายหาดทรายขาว น้ำทะเลใส รีสอร์ตหรู อากาศดีตลอดปี',full:'ซานย่า เมืองรีสอร์ตใต้สุดจีน บนเกาะไหหลำ ชายหาด ดำน้ำ Atlantis เหมาะฮันนีมูน',
+   attractions:[
+    {icon:'🏖️',zh:'亚龙湾',name:'Yalong Bay (หยาหลงวาน)',desc:'ชายหาดสวยสุดของจีน ทรายขาวน้ำใสฟ้า ดำน้ำตื้นปะการัง'},
+    {icon:'🏄',zh:'大东海',name:'Dadonghai Beach',desc:'ชายหาดเล่นกีฬาทะเล เซิร์ฟ ไคท์บอร์ด เจ็ตสกี วิวสวย'},
+    {icon:'🌊',zh:'天涯海角',name:'Tianya Haijiao (สุดปลายแผ่นดิน)',desc:'แหลมหินตำนาน "สุดโลก" วิวทะเลสวย จุดเซลฟี่คลาสสิก'},
+    {icon:'🌺',zh:'南山寺',name:'Nanshan Temple (วัดหนานซาน)',desc:'วัดพุทธ พระกวนอิมยักษ์ริมทะเล สูง 108 ม. ตระการตามาก'},
+    {icon:'🐬',zh:'蜈支洲岛',name:'Wuzhizhou Island (เกาะวู้จือโจว)',desc:'เกาะดำน้ำสวยสุด ปะการังสี ปลาทอง เต่าทะเล เรือกระจก'},
+    {icon:'🌊',zh:'亚特兰蒂斯',name:'Atlantis Sanya Waterpark',desc:'สวนน้ำในรีสอร์ตหรู ตัวเร็วสุดในเอเชีย พิพิธภัณฑ์สัตว์น้ำ'},
+   ],
+   transport:{air:'Phoenix (SYX) · 80+ เมืองทั่วจีน',rail:'Sanya · HSR วงแหวนเกาะ 30 นาทีถึงฉงไห่',metro:'ไม่มี · รถบัส + DiDi'}},
+
+  {id:'xiamen',zh:'厦门',en:'Xiamen',th:'เซียะเหมิน',lat:24.4798,lng:118.0894,province:'มณฑลฝูเจี้ยน',pop:'5.2 ล้านคน',area:'1,699 กม²',climate:'กึ่งร้อนชื้น',best:'ต.ค.–เม.ย.',tags:['ทะเล','เกาะ','UNESCO'],img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png',desc:'เมืองสวนริมทะเล เกาะกู่หลาง UNESCO อากาศดี อาหารทะเลสด',full:'เซียะเหมิน เมืองสะอาดสวยงาม เกาะกู่หลาง UNESCO 2017 มหาวิทยาลัยสวยสุดในจีน',
+   attractions:[
+    {icon:'🏝️',zh:'鼓浪屿',name:'Gulangyu Island (เกาะกู่หลาง)',desc:'เกาะมรดกโลก UNESCO 2017 ไร้รถ สถาปัตย์โคโลเนียล 10 ชาติ'},
+    {icon:'🛕',zh:'南普陀寺',name:'Nanputuo Temple (หนานผู่โถ)',desc:'วัดพุทธมหายาน 1,000 ปี ในหุบเขาหินแกรนิต เจ้าแม่กวนอิม'},
+    {icon:'🏰',zh:'胡里山炮台',name:'Hulishan Fortress (ป้อมฮูหลีซาน)',desc:'ป้อมปราการชายทะเล ค.ศ. 1894 ปืนใหญ่เก่าแก่ วิวทะเลสวย'},
+    {icon:'🌆',zh:'中山路',name:'Zhongshan Road (ถนนจงซาน)',desc:'ถนนช้อปปิ้งเก่าแก่สไตล์โคโลเนียล ของกินชื่อดัง ไก่ทอด'},
+    {icon:'🎓',zh:'厦门大学',name:'Xiamen University',desc:'มหาวิทยาลัยสวยสุดในจีน สนามหญ้า อาคารแดง Neogothic ริมทะเล'},
+   ],
+   transport:{air:'Gaoqi (XMN) · 50+ เส้นทางนานาชาติ',rail:'Xiamen North · HSR ฝูโจว 45 นาที กว่างโจว 2 ชม.',metro:'6 สาย 98 สถานี · 06:30–23:00'}},
+
+  {id:'huangshan',zh:'黄山',en:'Huangshan',th:'หวงซาน',lat:29.7150,lng:118.3376,province:'มณฑลอานฮุย',pop:'1.4 ล้านคน',area:'9,807 กม²',climate:'ภูเขาหมอก',best:'มี.ค.–พ.ย.',tags:['ภูเขา','ทะเลเมฆ','UNESCO'],img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png',desc:'ทะเลเมฆ หินแปลกตา สนอายุพันปี 4 มหัศจรรย์ของหวงซาน มรดกโลก',full:'หวงซาน "ภูเขาสีเหลือง" มรดกโลก UNESCO 2 ประเภท ทะเลเมฆ พระอาทิตย์ขึ้น-ตก หินแกรนิตพิสดาร',
+   attractions:[
+    {icon:'🏔️',zh:'黄山风景区',name:'Mount Huangshan (หวงซานหลัก)',desc:'หินแกรนิตพิสดาร สนโบราณ ทะเลเมฆ 4 ฤดูวิวต่างกัน'},
+    {icon:'🌊',zh:'西海大峡谷',name:'Xihai Grand Canyon (แกรนด์แคนยอน)',desc:'หุบเขาลึก สะพานแขวน ลิฟต์ลงหุบเขา ทะเลเมฆยามเช้า'},
+    {icon:'🏘️',zh:'宏村',name:'Hongcun Village (หงชุน)',desc:'หมู่บ้านโบราณยุคหมิง-ชิง สถาปัตย์ Huizhou สระกลางหมู่บ้าน'},
+    {icon:'🏡',zh:'西递',name:'Xidi Village (ซีตี้)',desc:'หมู่บ้าน UNESCO เก่าแก่ 900 ปี ประตูโค้งหิน ซอยหิน สวยงาม'},
+    {icon:'🌸',zh:'塔川',name:'Tachuan Village (ต้าชวน)',desc:'หมู่บ้านใบไม้เหลืองแดงสวยสุดในอานฮุย ตุลาคม-พฤศจิกายน'},
+   ],
+   transport:{air:'Huangshan Tunxi (TXN)',rail:'Huangshan North · HSR หังโจว 1.5 ชม.',metro:'ไม่มี · รถบัสอุทยาน'}},
+
+  {id:'zhangjiajie',zh:'张家界',en:'Zhangjiajie',th:'จางเจียเจี้ย',lat:29.1170,lng:110.4790,province:'มณฑลหูหนาน',pop:'1.8 ล้านคน',area:'9,516 กม²',climate:'กึ่งร้อนชื้น',best:'เม.ย.–ต.ค.',tags:['อวตาร','เสาหิน','กระเช้า'],img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png',desc:'เสาหินทรายกว่า 3,000 ต้น ต้นแบบดาว Pandora Avatar สะพานแก้วยาวสุดในโลก',full:'จางเจียเจี้ย อุทยานมรดกโลก UNESCO ภูเขาฮาลีลูยาห์ เสาหินลอยฟ้า',
+   attractions:[
+    {icon:'🏞️',zh:'张家界国家森林公园',name:'Zhangjiajie National Forest Park',desc:'อุทยานแรกของจีน เสาหิน 3,000 ต้น ต้นแบบ Avatar ดาว Pandora'},
+    {icon:'⛰️',zh:'天门山',name:'Tianmen Mountain (เทียนเหมินซาน)',desc:'ประตูสวรรค์ถ้ำหิน เส้นทางแก้วผา ทางขึ้น 99 โค้งหวาดเสียว'},
+    {icon:'🌉',zh:'玻璃桥',name:'Zhangjiajie Glass Bridge (สะพานแก้ว)',desc:'สะพานแก้วยาว 430 ม. สูง 300 ม. ยาวสุดในโลก หวาดเสียวมาก'},
+    {icon:'🌊',zh:'宝峰湖',name:'Baofeng Lake (เป่าเฟิง)',desc:'ทะเลสาบมรกตกลางหุบเขา ล่องเรือชมเสาหิน'},
+    {icon:'🕳️',zh:'黄龙洞',name:'Huanglong Cave (ถ้ำหวงหลง)',desc:'ถ้ำขนาดยักษ์ 4 ชั้น หินงอกย้อยยักษ์ มังกรทอง ล่องเรือในถ้ำ'},
+   ],
+   transport:{air:'Zhangjiajie Hehua (DYG) · 50+ เมือง',rail:'Zhangjiajie West · HSR ฉางซา 2 ชม.',metro:'ไม่มี · รถบัสอุทยาน'}},
+
+  {id:'lhasa',zh:'拉萨',en:'Lhasa',th:'ลาซา',lat:29.6520,lng:91.1721,province:'เขตปกครองทิเบต',pop:'0.9 ล้านคน',area:'29,518 กม²',climate:'ที่ราบสูงแห้ง',best:'พ.ค.–ต.ค.',tags:['ทิเบต','พุทธ','Permit'],img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png',desc:'หลังคาโลก พระราชวังโปตาลา วัดโจคัง ท้องฟ้าใสสุดในโลก',full:'ลาซา ระดับ 3,650 ม. ศูนย์กลางพุทธศาสนาทิเบต ต้องมี Tibet Travel Permit ทำผ่านเอเจนซี่ล่วงหน้า 10-15 วัน',
+   attractions:[
+    {icon:'🏯',zh:'布达拉宫',name:'Potala Palace (พระราชวังโปตาลา)',desc:'พระราชวัง 13 ชั้น 1,000 ห้อง มรดกโลก จำกัด 2,300 คน/วัน ต้องจองล่วงหน้า'},
+    {icon:'🛕',zh:'大昭寺',name:'Jokhang Temple (วัดโจคัง)',desc:'วัดศักดิ์สิทธิ์สุดของทิเบต แสวงบุญ 24 ชม. กราบหน้าพระอยู่ตลอด'},
+    {icon:'🎭',zh:'八廓街',name:'Barkhor Street (ถนนบาร์คอร์)',desc:'ถนนแสวงบุญรอบวัดโจคัง ตลาดของที่ระลึกทิเบตออเทนติก'},
+    {icon:'🏔️',zh:'哲蚌寺',name:'Drepung Monastery (วัดเดรปุง)',desc:'วัดทิเบตใหญ่สุดในโลก พระสงฆ์ 7,000 รูป หน้าผาเขาสีขาว'},
+    {icon:'🕌',zh:'色拉寺',name:'Sera Monastery (วัดเซรา)',desc:'วัดชื่อดัง ชมพระถกเถียงธรรมทุกบ่าย (ยกเว้นอาทิตย์) น่าประทับใจ'},
+    {icon:'🌿',zh:'罗布林卡',name:'Norbulingka (สวนโนร์บูลิงกา)',desc:'พระราชอุทยานทิเบต ดาไล่ลามะฤดูร้อน เทศกาลดอกไม้เดือนมิ.ย.'},
+    {icon:'🌊',zh:'羊卓雍错',name:'Yamdrok Lake (ทะเลสาบยัมดรก)',desc:'ทะเลสาบมรกต 4,441 ม. ห่าง 70 กม. สวยที่สุดในทิเบต'},
+    {icon:'🏔️',zh:'纳木错',name:'Namtso Lake (ทะเลสาบนัมโช)',desc:'ทะเลสาบศักดิ์สิทธิ์ที่สูงสุดในโลก 4,718 ม. เกาะกลางน้ำ'},
+    {icon:'🏛️',zh:'西藏博物馆',name:'Tibet Museum (พิพิธภัณฑ์ทิเบต)',desc:'ประวัติศาสตร์ วัฒนธรรม ศิลปะทิเบต โบราณวัตถุ ฟรีเข้าชม'},
+    {icon:'⛰️',zh:'药王山',name:'Chakpori Hill (จุดชมวิว)',desc:'เนินชมวิว Potala Palace สวยที่สุด จุดถ่ายภาพคลาสสิก'},
+    {icon:'🛒',zh:'冲赛康市场',name:'Tromzikhang Market (ตลาดท้องถิ่น)',desc:'ตลาดของที่ระลึก เครื่องประดับ พระพุทธ ผ้าทิเบต ตันฑากา'},
+    {icon:'⚠️',zh:'高原反应',name:'ระวัง! Altitude Sickness',desc:'พักผ่อน 1-2 วันแรก ดื่มน้ำมาก ไม่วิ่ง ยา Diamox ช่วยได้'},
+   ],
+   transport:{air:'Lhasa Gonggar (LXA) · บินจากเฉิงตู 2 ชม.',rail:'Z21 จากปักกิ่ง 40 ชม. ผ่านระดับ 5,072 ม.',metro:'ไม่มี · รถบัส + รถเช่า+คนขับ'}},
+
+  {id:'wulong',zh:'武隆',en:'Wulong',th:'อู่หลง',lat:29.3248,lng:107.7572,province:'นครฉงชิ่ง',pop:'0.4 ล้านคน',area:'2,901 กม²',climate:'กึ่งร้อนชื้น',best:'เม.ย.–ต.ค.',tags:['มรดกโลก','ธรรมชาติ','กีฬา'],img:'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/800px-Flag_of_the_People%27s_Republic_of_China.svg.png',desc:'มรดกโลก UNESCO สะพานธรรมชาติยักษ์ ถ้ำหินงอกย้อยสุดอลังการ ทุ่งหญ้าสูง ถ่ายทำ Transformers 4',full:'อู่หลง อำเภอในนครฉงชิ่ง มรดกโลก UNESCO ธรณีสัณฐาน Karst ยักษ์ใหญ่ สะพานธรรมชาติสามแห่ง หุบเขาลึก ถ้ำฝูหรง ภูเขาเซียนหนู่ซาน เหมาะสำหรับนักท่องเที่ยวที่ชอบธรรมชาติสุดขีดและกิจกรรม Outdoor เชื่อมต่อง่ายจากฉงชิ่งประมาณ 3 ชั่วโมง',
+   attractions:[
+    {icon:'🌉',zh:'天坑三桥',name:'Three Natural Bridges (สะพานธรรมชาติสามแห่ง)',desc:'สะพานหินธรรมชาติยักษ์ 3 แห่ง ฉากใน Transformers 4 มรดกโลก UNESCO'},
+    {icon:'🕳️',zh:'芙蓉洞',name:'Furong Cave (ถ้ำฝูหรง)',desc:'ถ้ำหินงอกย้อยสุดงดงาม ยาว 2.7 กม. ผลึกขาวใสระยิบระยับ'},
+    {icon:'⛰️',zh:'仙女山',name:'Fairy Mountain (เซียนหนู่ซาน)',desc:'ทุ่งหญ้าสูง 2,000 ม. หิมะ ทะเลหมอก ขี่ม้า ลานสกีฤดูหนาว'},
+    {icon:'🏔️',zh:'龙水峡地缝',name:'Longshuixia Fissure (รอยแยกหินลึก)',desc:'หุบหินธรรมชาติลึก 200 ม. น้ำตกไหลผ่าน บรรยากาศเย็นสดชื่น'},
+    {icon:'🚡',zh:'武隆喀斯特',name:'Wulong Karst UNESCO Zone',desc:'เขตมรดกโลก Karst ครอบคลุม 3 พื้นที่หลัก ธรณีวิทยาหินปูนอายุล้านปี'},
+   ],
+   transport:{air:'บินมาฉงชิ่ง (CKG) แล้วต่อรถบัส 3 ชม.',rail:'รถไฟจากฉงชิ่งเหนือ → อู่หลง ~2.5 ชม.',metro:'ไม่มี MRT · รถบัสหรือรถเช่าท้องถิ่น'}},
+];
+
+/* ══════════════════════════════
+   ROUTE DATA
+══════════════════════════════ */
+const routes = {
+  'beijing-shanghai':[{mode:'🚄',name:'HSR G-Train',time:'4 ชม. 18 น.',detail:'Beijing South → Shanghai Hongqiao\nG1/G2 ออกทุกชั่วโมง',price:'¥553–1,748',link:'https://www.trip.com/trains/'},{mode:'✈️',name:'เครื่องบิน',time:'2 ชม. 20 น.',detail:'PEK/PKX → PVG/SHA\nวันละ 50+ เที่ยว',price:'¥500–2,500',link:'https://www.trip.com/flights/'}],
+  'beijing-xian':[{mode:'🚄',name:'HSR',time:'4 ชม. 30 น.',detail:"Beijing West → Xi'an North",price:'¥515–939',link:'https://www.trip.com/trains/'},{mode:'✈️',name:'เครื่องบิน',time:'2 ชม.',detail:'PEK → XIY',price:'¥400–1,800',link:'https://www.trip.com/flights/'}],
+  'beijing-chengdu':[{mode:'🚄',name:'HSR',time:'8 ชม. 30 น.',detail:'Beijing West → Chengdu East',price:'¥829–1,548',link:'https://www.trip.com/trains/'},{mode:'✈️',name:'เครื่องบิน',time:'2 ชม. 45 น.',detail:'PEK → CTU/TFU',price:'¥600–2,200',link:'https://www.trip.com/flights/'}],
+  'beijing-guilin':[{mode:'🚄',name:'HSR',time:'7 ชม.',detail:'Beijing West → Guilin North',price:'¥809–1,238',link:'https://www.trip.com/trains/'},{mode:'✈️',name:'เครื่องบิน',time:'2 ชม. 50 น.',detail:'PEK → KWL',price:'¥500–2,000',link:'https://www.trip.com/flights/'}],
+  'beijing-lhasa':[{mode:'🚂',name:'Qinghai-Tibet Train',time:'40 ชม.',detail:'Beijing West → Lhasa\nZ21 ผ่านระดับ 5,072 ม.',price:'¥389–1,286',link:'https://www.trip.com/trains/'},{mode:'✈️',name:'เครื่องบิน',time:'5 ชม.',detail:'PEK → LXA ต่อเมือง',price:'¥1,200–3,500',link:'https://www.trip.com/flights/'},{mode:'⚠️',name:'Permit ทิเบต',time:'จำเป็น',detail:'Tibet Travel Permit\nทำผ่านทัวร์ล่วงหน้า 10-15 วัน',price:'ฟรี',link:''}],
+  'beijing-nanjing':[{mode:'🚄',name:'HSR',time:'2 ชม.',detail:'Beijing South → Nanjing South',price:'¥233–464',link:'https://www.trip.com/trains/'}],
+  'shanghai-hangzhou':[{mode:'🚄',name:'HSR',time:'45 น.',detail:'Shanghai Hongqiao → Hangzhou East\nออกทุก 30 นาที',price:'¥73–134',link:'https://www.trip.com/trains/'}],
+  'shanghai-nanjing':[{mode:'🚄',name:'HSR',time:'1 ชม.',detail:'Shanghai Hongqiao → Nanjing South',price:'¥139–261',link:'https://www.trip.com/trains/'}],
+  'shanghai-xiamen':[{mode:'🚄',name:'HSR',time:'3 ชม. 30 น.',detail:'Shanghai Hongqiao → Xiamen North',price:'¥300–561',link:'https://www.trip.com/trains/'},{mode:'✈️',name:'เครื่องบิน',time:'1 ชม. 40 น.',detail:'SHA/PVG → XMN',price:'¥350–1,200',link:'https://www.trip.com/flights/'}],
+  'chengdu-chongqing':[{mode:'🚄',name:'HSR',time:'1 ชม. 5 น.',detail:'Chengdu East → Chongqing North\nออกทุก 30 นาที',price:'¥136–197',link:'https://www.trip.com/trains/'}],
+  'chengdu-xian':[{mode:'🚄',name:'HSR',time:'3 ชม. 30 น.',detail:"Chengdu East → Xi'an North",price:'¥295–549',link:'https://www.trip.com/trains/'},{mode:'✈️',name:'เครื่องบิน',time:'1 ชม. 30 น.',detail:'CTU → XIY',price:'¥300–1,200',link:'https://www.trip.com/flights/'}],
+  'chengdu-lhasa':[{mode:'✈️',name:'เครื่องบิน',time:'2 ชม.',detail:'CTU → LXA ตรงทุกวัน',price:'¥800–2,500',link:'https://www.trip.com/flights/'},{mode:'⚠️',name:'Permit ทิเบต',time:'จำเป็น',detail:'Tibet Travel Permit ทำผ่านทัวร์',price:'ฟรี',link:''}],
+  'chengdu-lijiang':[{mode:'✈️',name:'เครื่องบิน',time:'1 ชม. 20 น.',detail:'CTU → LJG ตรง',price:'¥300–900',link:'https://www.trip.com/flights/'}],
+  'chengdu-guilin':[{mode:'✈️',name:'เครื่องบิน',time:'2 ชม.',detail:'CTU → KWL ตรง',price:'¥400–1,500',link:'https://www.trip.com/flights/'},{mode:'🚄',name:'HSR',time:'6–7 ชม.',detail:'ต่อที่กุ้ยหยาง',price:'¥350–650',link:'https://www.trip.com/trains/'}],
+  'chengdu-kunming':[{mode:'🚄',name:'HSR',time:'3 ชม.',detail:'Chengdu East → Kunming South',price:'¥290–540',link:'https://www.trip.com/trains/'},{mode:'✈️',name:'เครื่องบิน',time:'1 ชม. 10 น.',detail:'CTU → KMG',price:'¥300–900',link:'https://www.trip.com/flights/'}],
+  'chengdu-zhangjiajie':[{mode:'✈️',name:'เครื่องบิน',time:'2 ชม.',detail:'CTU → DYG ตรง',price:'¥400–1,200',link:'https://www.trip.com/flights/'},{mode:'🚄',name:'HSR',time:'5–6 ชม.',detail:'ต่อที่ฉางซา',price:'¥350–600',link:'https://www.trip.com/trains/'}],
+  'kunming-dali':[{mode:'🚄',name:'HSR',time:'1 ชม. 30 น.',detail:'Kunming South → Dali',price:'¥106–196',link:'https://www.trip.com/trains/'}],
+  'kunming-lijiang':[{mode:'🚄',name:'HSR',time:'2 ชม. 30 น.',detail:'Kunming → Lijiang ต่อที่ต้าหลี่',price:'¥196–360',link:'https://www.trip.com/trains/'}],
+  'dali-lijiang':[{mode:'🚄',name:'HSR',time:'1 ชม.',detail:'Dali → Lijiang',price:'¥90–168',link:'https://www.trip.com/trains/'}],
+  'guilin-zhangjiajie':[{mode:'🚄',name:'HSR',time:'2 ชม. 30 น.',detail:'Guilin North → Zhangjiajie',price:'¥200–370',link:'https://www.trip.com/trains/'},{mode:'✈️',name:'เครื่องบิน',time:'1 ชม. 30 น.',detail:'KWL → DYG',price:'¥300–900',link:'https://www.trip.com/flights/'}],
+  'hangzhou-huangshan':[{mode:'🚄',name:'HSR',time:'1 ชม. 30 น.',detail:'Hangzhou East → Huangshan North',price:'¥91–168',link:'https://www.trip.com/trains/'}],
+  'chongqing-zhangjiajie':[{mode:'🚄',name:'HSR',time:'3 ชม.',detail:'Chongqing → Zhangjiajie',price:'¥200–380',link:'https://www.trip.com/trains/'},{mode:'✈️',name:'เครื่องบิน',time:'1 ชม. 20 น.',detail:'CKG → DYG',price:'¥300–900',link:'https://www.trip.com/flights/'}],
+  'chongqing-wulong':[{mode:'🚄',name:'รถไฟ',time:'2 ชม. 30 น.',detail:'Chongqing North → Wulong\nรถไฟออกหลายรอบต่อวัน',price:'¥50–80',link:'https://www.trip.com/trains/'},{mode:'🚌',name:'รถบัส',time:'3 ชม.',detail:'สถานีรถบัส Caiyuanba → อู่หลง\nออกทุกชั่วโมง',price:'¥70–90',link:''}],
+  'chengdu-wulong':[{mode:'🚄',name:'HSR + ต่อรถไฟ',time:'4–5 ชม.',detail:'Chengdu East → Chongqing → Wulong',price:'¥180–300',link:'https://www.trip.com/trains/'},{mode:'✈️',name:'บิน+รถบัส',time:'4 ชม.',detail:'CTU → CKG บิน 1 ชม. + รถบัสอู่หลง 3 ชม.',price:'¥400–1,000',link:'https://www.trip.com/flights/'}],
+  'chongqing-guilin':[{mode:'🚄',name:'HSR',time:'3 ชม. 30 น.',detail:'Chongqing → Guilin North',price:'¥280–530',link:'https://www.trip.com/trains/'},{mode:'✈️',name:'เครื่องบิน',time:'1 ชม. 30 น.',detail:'CKG → KWL',price:'¥300–1,000',link:'https://www.trip.com/flights/'}],
+  'guangzhou-guilin':[{mode:'🚄',name:'HSR',time:'2 ชม.',detail:'Guangzhou South → Guilin North',price:'¥180–338',link:'https://www.trip.com/trains/'},{mode:'✈️',name:'เครื่องบิน',time:'1 ชม.',detail:'CAN → KWL',price:'¥200–700',link:'https://www.trip.com/flights/'}],
+  'guangzhou-xiamen':[{mode:'🚄',name:'HSR',time:'2 ชม.',detail:'Guangzhou South → Xiamen North',price:'¥200–380',link:'https://www.trip.com/trains/'}],
+  'xian-guilin':[{mode:'🚄',name:'HSR',time:'6 ชม.',detail:"Xi'an → Guilin North",price:'¥600–900',link:'https://www.trip.com/trains/'},{mode:'✈️',name:'เครื่องบิน',time:'2 ชม. 30 น.',detail:'XIY → KWL',price:'¥500–1,500',link:'https://www.trip.com/flights/'}],
+  'xian-shanghai':[{mode:'🚄',name:'HSR',time:'5 ชม. 30 น.',detail:"Xi'an North → Shanghai Hongqiao",price:'¥599–1,097',link:'https://www.trip.com/trains/'}],
+};
+function getKey(a,b){ return routes[a+'-'+b]?a+'-'+b:(routes[b+'-'+a]?b+'-'+a:null); }
+
+/* ══════════════════════════════
+   RENDER CARDS
+══════════════════════════════ */
+function renderCards(){
+  const g = document.getElementById('cityGrid');
+  cities.forEach((c,i)=>{
+    const el = document.createElement('div');
+    el.className = 'city-card reveal';
+    el.style.transitionDelay = (i%4*60)+'ms';
+    el.innerHTML = `
+      <div class="ci-img">
+        <img src="${c.img}" alt="${c.en}" loading="lazy">
+        <div class="ci-ov"></div>
+        <span class="ci-badge">${c.province}</span>
+        <span class="ci-num">${String(i+1).padStart(2,'0')}</span>
+      </div>
+      <div class="ci-body">
+        <div class="ci-rule"></div>
+        <span class="ci-zh">${c.zh}</span>
+        <span class="ci-en">${c.en} · ${c.th}</span>
+        <p class="ci-desc">${c.desc}</p>
+        <div class="ci-tags">${c.tags.map(t=>`<span class="ci-tag">${t}</span>`).join('')}</div>
+        <div class="ci-actions">
+          <button class="ci-btn" onclick="openMd('${c.id}')">
+            <span>ดูข้อมูล · 了解更多</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+          <button class="ci-btn secondary" onclick="flyToCity('${c.id}')">
+            <span>📍 ดูบนแผนที่</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+          </button>
+        </div>
+      </div>`;
+    g.appendChild(el);
+  });
+}
+
+/* ══════════════════════════════
+   ROUTE PLANNER
+══════════════════════════════ */
+
+// Map each attraction id → city id
+const attCityMap = {
+  jiuzhaigou:'chengdu', huanglong_cd:'chengdu', jzh_airport:'chengdu',
+  emei:'chengdu', siguniang:'chengdu', shuangqiaogou:'chengdu',
+  xiling_snow:'chengdu', wawu:'chengdu', bipeng:'chengdu',
+  lixian_guer:'chengdu', dagu_glacier:'chengdu', heishui_zhagana:'chengdu',
+  litang_xiaolu:'chengdu', lianbaoyeze:'chengdu', panda_base:'chengdu',
+  panda_selfie:'chengdu', dujiangyan:'chengdu', maoxian:'chengdu',
+  diexi_lake:'chengdu', chongzhou_old:'chengdu', tianfu_airport:'chengdu',
+  chengdu_east_hsr:'chengdu', kuanzhai_alley:'chengdu', jinli_street:'chengdu',
+  sanxingdui:'chengdu', chengdu_metro_chunxi:'chengdu', leshan_giant:'chengdu', wuhou_shrine:'chengdu',
+  dazu_rocks:'chongqing',
+  zhangjiajie_np:'zhangjiajie',
+  liriver:'guilin',
+  huangshan_mt:'huangshan',
+  forbidden_city:'beijing', great_wall_mutianyu:'beijing', summer_palace:'beijing',
+  temple_heaven:'beijing', nanluoguxiang:'beijing', '798_art':'beijing',
+  beihai_park:'beijing', tiananmen:'beijing',
+  disneyland_sh:'shanghai',
+  canton_tower:'guangzhou', chimelong:'guangzhou', shamian_island:'guangzhou',
+  dim_sum_baietan:'guangzhou', chen_clan_gd:'guangzhou', baiyun_mountain:'guangzhou', guangzhou_airport:'guangzhou',
+  stone_forest:'kunming', dianchi_lake:'kunming', western_hills:'kunming',
+  yuantong_temple:'kunming', flower_market_km:'kunming', green_lake_km:'kunming', kunming_airport:'kunming',
+  wulong_tiankeng:'wulong', wulong_karst:'wulong', wulong_fairy:'wulong', wulong_longshuixia:'wulong',
+};
+
+// Local travel time from city center to attraction (in minutes)
+const attLocalTime = {
+  jiuzhaigou:540, huanglong_cd:570, jzh_airport:0, emei:60, siguniang:300, shuangqiaogou:300,
+  xiling_snow:90, wawu:180, bipeng:300, lixian_guer:240, dagu_glacier:360,
+  heishui_zhagana:420, litang_xiaolu:480, lianbaoyeze:480, panda_base:30,
+  panda_selfie:60, dujiangyan:60, maoxian:180, diexi_lake:360, chongzhou_old:40,
+  tianfu_airport:36, chengdu_east_hsr:0, kuanzhai_alley:15, jinli_street:20,
+  sanxingdui:60, chengdu_metro_chunxi:10, leshan_giant:120, wuhou_shrine:25,
+  dazu_rocks:90,
+  zhangjiajie_np:20,
+  liriver:30,
+  huangshan_mt:60,
+  forbidden_city:20, great_wall_mutianyu:120, summer_palace:40, temple_heaven:25,
+  nanluoguxiang:20, '798_art':50, beihai_park:25, tiananmen:20,
+  disneyland_sh:45,
+  canton_tower:20, chimelong:40, shamian_island:25, dim_sum_baietan:30,
+  chen_clan_gd:25, baiyun_mountain:40, guangzhou_airport:45,
+  stone_forest:90, dianchi_lake:30, western_hills:45, yuantong_temple:15,
+  flower_market_km:35, green_lake_km:15, kunming_airport:42,
+};
+
+// Local transport description
+const attLocalDesc = {
+  jiuzhaigou:'รถบัสจากเฉิงตู ~9 ชม. หรือบิน 45 นาที', huanglong_cd:'รถบัสจากจิ่วจ้ายโกว',
+  emei:'รถไฟ + รถบัสจากเฉิงตู', siguniang:'รถบัสจากเฉิงตู',
+  xiling_snow:'รถบัสด่วนจากเฉิงตู', wawu:'รถบัสจากเฉิงตู',
+  bipeng:'รถบัสจากเฉิงตู', lixian_guer:'รถบัสจากเฉิงตู',
+  dagu_glacier:'รถบัสจากเฉิงตู', heishui_zhagana:'รถบัสจากเฉิงตู',
+  litang_xiaolu:'บินหรือรถบัส ~8 ชม.', lianbaoyeze:'รถบัสจากเฉิงตู',
+  panda_base:'MRT สาย 3 + รถบัส', panda_selfie:'รถไฟ 1 ชม.',
+  dujiangyan:'รถไฟ S5 จากเฉิงตู', maoxian:'รถบัสจากเฉิงตู',
+  diexi_lake:'ระหว่างทางไปจิ่วจ้ายโกว', chongzhou_old:'รถบัสจากเฉิงตู',
+  tianfu_airport:'รถไฟ S11', chengdu_east_hsr:'MRT สาย 2/7',
+  kuanzhai_alley:'MRT สาย 4', jinli_street:'รถบัส / เดิน',
+  sanxingdui:'รถบัสจากเฉิงตู ~1 ชม.', chengdu_metro_chunxi:'MRT สาย 2/3',
+  leshan_giant:'รถบัส/รถไฟ ~2 ชม.', wuhou_shrine:'รถบัส / MRT สาย 3',
+  dazu_rocks:'รถบัสจากฉงชิ่ง 1.5 ชม.',
+  zhangjiajie_np:'รถบัสภายในอุทยาน', liriver:'เรือจากกุ้ยหลิน',
+  huangshan_mt:'กระเช้า + เดิน',
+  forbidden_city:'MRT สาย 1', great_wall_mutianyu:'รถบัส/ทัวร์จากปักกิ่ง',
+  summer_palace:'MRT สาย 4', temple_heaven:'MRT สาย 5',
+  nanluoguxiang:'MRT สาย 8', '798_art':'รถบัส 401',
+  beihai_park:'MRT สาย 4', tiananmen:'MRT สาย 1',
+  disneyland_sh:'MRT สาย 11 Disney Line',
+  canton_tower:'MRT สาย 3', chimelong:'MRT สาย 7',
+  shamian_island:'MRT สาย 1', dim_sum_baietan:'MRT สาย 8',
+  chen_clan_gd:'MRT สาย 1', baiyun_mountain:'รถบัส 24',
+  guangzhou_airport:'MRT สาย 3',
+  stone_forest:'รถบัสจากคุณหมิง', dianchi_lake:'MRT สาย 3',
+  western_hills:'MRT สาย 3 + กระเช้า', yuantong_temple:'MRT สาย 1',
+  flower_market_km:'MRT สาย 6', green_lake_km:'MRT สาย 1',
+  kunming_airport:'MRT สาย 6',
+};
+
+function minutesToStr(min){
+  if(min<60) return `${min} นาที`;
+  const h=Math.floor(min/60), m=min%60;
+  return m>0?`${h} ชม. ${m} น.`:`${h} ชม.`;
+}
+
+// Supported featured attractions per city (4 each) shown in dropdown
+const featuredAttractions = [
+  // Beijing
+  'forbidden_city','great_wall_mutianyu','summer_palace','temple_heaven',
+  'nanluoguxiang','tiananmen',
+  // Shanghai
+  'disneyland_sh',
+  // Chengdu
+  'panda_base','jiuzhaigou','kuanzhai_alley','jinli_street','leshan_giant',
+  'emei','sanxingdui','wuhou_shrine',
+  // Chongqing
+  'dazu_rocks',
+  // Guangzhou
+  'canton_tower','chimelong','shamian_island','chen_clan_gd',
+  // Kunming
+  'stone_forest','dianchi_lake','western_hills','flower_market_km',
+  // Guilin
+  'liriver',
+  // Huangshan
+  'huangshan_mt',
+  // Zhangjiajie
+  'zhangjiajie_np',
+  // Wulong
+  'wulong_tiankeng','wulong_karst','wulong_fairy','wulong_longshuixia',
+];
+
+function populateSelects(){
+  const f=document.getElementById('rFrom'), t=document.getElementById('rTo');
+  cities.forEach(c=>{
+    f.innerHTML+=`<option value="${c.id}">${c.zh} ${c.th}</option>`;
+    t.innerHTML+=`<option value="${c.id}">${c.zh} ${c.th}</option>`;
+  });
+
+  // Populate attraction selects grouped by city
+  const af=document.getElementById('aFrom'), at=document.getElementById('aTo');
+  const cityGroups={};
+  featuredAttractions.forEach(aid=>{
+    const a=attractions.find(x=>x.id===aid); if(!a) return;
+    const cid=attCityMap[aid]; if(!cid) return;
+    const city=cities.find(x=>x.id===cid); if(!city) return;
+    if(!cityGroups[cid]) cityGroups[cid]={city,atts:[]};
+    cityGroups[cid].atts.push(a);
+  });
+  [af,at].forEach(sel=>{
+    Object.values(cityGroups).forEach(({city,atts})=>{
+      const grp=document.createElement('optgroup');
+      grp.label=`${city.zh} ${city.th}`;
+      atts.forEach(a=>{ const o=document.createElement('option'); o.value=a.id; o.textContent=`${a.zh} · ${a.th}`; grp.appendChild(o); });
+      sel.appendChild(grp);
+    });
+  });
+}
+populateSelects();
+
+function switchTab(tab,btn){
+  document.querySelectorAll('.rtab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('tab-city').style.display=tab==='city'?'':'none';
+  document.getElementById('tab-att').style.display=tab==='att'?'':'none';
+  document.getElementById('route-result').style.display='none';
+}
+
+function swapRoute(){
+  const f=document.getElementById('rFrom'),t=document.getElementById('rTo');
+  [f.value,t.value]=[t.value,f.value];
+}
+function swapAtt(){
+  const f=document.getElementById('aFrom'),t=document.getElementById('aTo');
+  [f.value,t.value]=[t.value,f.value];
+}
+
+function calcRoute(){
+  const fId=document.getElementById('rFrom').value;
+  const tId=document.getElementById('rTo').value;
+  const res=document.getElementById('route-result');
+  res.style.display='block';
+  if(!fId||!tId){res.innerHTML='<div class="rr-no">⚠️ กรุณาเลือกเมืองทั้งสอง</div>';return;}
+  if(fId===tId){res.innerHTML='<div class="rr-no">😅 เมืองต้นทางและปลายทางเหมือนกัน</div>';return;}
+  const from=cities.find(x=>x.id===fId);
+  const to=cities.find(x=>x.id===tId);
+  const key=getKey(fId,tId);
+  if(!key){
+    res.innerHTML=`<div class="rr-title">🗺 ${from.zh} → ${to.zh}</div><div class="rr-no">ไม่มีข้อมูลเส้นทางนี้โดยตรง<br><a href="https://www.trip.com/flights/" target="_blank" style="color:var(--red)">🔗 ค้นหาที่ Trip.com</a></div>`;
+    return;
+  }
+  const data=routes[key];
+  const cards=data.map(r=>`
+    <div class="rr-card">
+      <span class="rr-mode">${r.mode}</span>
+      <span class="rr-name">${r.name}</span>
+      <span class="rr-time">⏱ ${r.time}</span>
+      <div class="rr-detail">${r.detail.replace(/\n/g,'<br>')}</div>
+      ${r.price?`<span class="rr-price">💰 ${r.price}</span>`:''}
+      ${r.link?`<a href="${r.link}" target="_blank" style="display:block;margin-top:.4rem;font-size:.62rem;color:var(--smoke4);text-decoration:none">🔗 จองที่นี่</a>`:''}
+    </div>`).join('');
+  res.innerHTML=`<div class="rr-title">🗺 ${from.zh} ${from.th} → ${to.zh} ${to.th}</div><div class="rr-cards">${cards}</div><div class="rr-note">⚠️ ราคาและเวลาเป็นข้อมูลอ้างอิง กรุณายืนยันก่อนเดินทาง</div>`;
+}
+
+function calcAttRoute(){
+  const aFromId=document.getElementById('aFrom').value;
+  const aToId=document.getElementById('aTo').value;
+  const res=document.getElementById('route-result');
+  res.style.display='block';
+  if(!aFromId||!aToId){res.innerHTML='<div class="rr-no">⚠️ กรุณาเลือกสถานที่ทั้งสอง</div>';return;}
+  if(aFromId===aToId){res.innerHTML='<div class="rr-no">😅 สถานที่ต้นทางและปลายทางเหมือนกัน</div>';return;}
+
+  const attFrom=attractions.find(x=>x.id===aFromId);
+  const attTo=attractions.find(x=>x.id===aToId);
+  const cityFromId=attCityMap[aFromId];
+  const cityToId=attCityMap[aToId];
+  const cityFrom=cities.find(x=>x.id===cityFromId);
+  const cityTo=cities.find(x=>x.id===cityToId);
+
+  const sameCity = cityFromId===cityToId;
+  let html=`<div class="rr-att-path">${attFrom.zh} <span class="arr">→</span> ${attTo.zh}</div>`;
+
+  let totalMin=0, priceMin='', priceMax='';
+
+  if(sameCity){
+    // Same city: direct local transport
+    const localMin=(attLocalTime[aFromId]||30)+(attLocalTime[aToId]||30);
+    totalMin=localMin;
+    html+=`<div class="rr-leg">
+      <div class="rr-leg-mode">🚌</div>
+      <div class="rr-leg-info">
+        <span class="rr-leg-name">เดินทางภายใน ${cityFrom.zh} ${cityFrom.th}</span>
+        <span class="rr-leg-time">${minutesToStr(localMin)}</span>
+        <div class="rr-leg-detail">${attLocalDesc[aFromId]||''} → ${attLocalDesc[aToId]||''}<br>เวลาโดยประมาณรวมเดินทาง+รอรถ</div>
+      </div>
+    </div>`;
+    priceMin='฿0–200'; priceMax='';
+  } else {
+    // Different cities: local from → inter-city → local to
+    const localFromMin=attLocalTime[aFromId]||20;
+    const localToMin=attLocalTime[aToId]||20;
+    const key=getKey(cityFromId,cityToId);
+    const interRoutes=key?routes[key]:null;
+
+    // Leg 1: local from attraction to city hub
+    html+=`<div class="rr-leg">
+      <div class="rr-leg-mode">🚌</div>
+      <div class="rr-leg-info">
+        <span class="rr-leg-name">จาก ${attFrom.zh} → ใจกลางเมือง ${cityFrom.zh}</span>
+        <span class="rr-leg-time">${minutesToStr(localFromMin)}</span>
+        <div class="rr-leg-detail">${attLocalDesc[aFromId]||'รถบัส/รถไฟท้องถิ่น'}</div>
+      </div>
+    </div>`;
+    totalMin+=localFromMin;
+
+    // Leg 2: inter-city routes
+    if(interRoutes){
+      interRoutes.forEach(r=>{
+        // parse time string to minutes
+        const tStr=r.time;
+        let tMin=0;
+        const hm=tStr.match(/(\d+)\s*ชม/); const mm=tStr.match(/(\d+)\s*น\./);
+        if(hm) tMin+=parseInt(hm[1])*60;
+        if(mm) tMin+=parseInt(mm[1]);
+        if(tMin===0){ const hOnly=tStr.match(/(\d+)/); if(hOnly) tMin=parseInt(hOnly[1])*60; }
+        html+=`<div class="rr-leg">
+          <div class="rr-leg-mode">${r.mode}</div>
+          <div class="rr-leg-info">
+            <span class="rr-leg-name">${r.name} · ${cityFrom.zh} → ${cityTo.zh}</span>
+            <span class="rr-leg-time">${r.time}</span>
+            <div class="rr-leg-detail">${r.detail.replace(/\n/g,'<br>')}</div>
+            ${r.price?`<span class="rr-leg-price">💰 ${r.price}</span>`:''}
+          </div>
+          ${r.link?`<a href="${r.link}" target="_blank" style="font-size:.6rem;color:var(--smoke4);text-decoration:none;white-space:nowrap">🔗 จอง</a>`:''}
+        </div>`;
+        // Use fastest option for total (first in list)
+        if(totalMin===localFromMin) totalMin+=tMin;
+      });
+    } else {
+      html+=`<div class="rr-leg">
+        <div class="rr-leg-mode">✈️</div>
+        <div class="rr-leg-info">
+          <span class="rr-leg-name">เที่ยวบิน ${cityFrom.zh} → ${cityTo.zh}</span>
+          <span class="rr-leg-time">ไม่มีข้อมูล</span>
+          <div class="rr-leg-detail"><a href="https://www.trip.com/flights/" target="_blank" style="color:var(--red)">🔗 ค้นหาที่ Trip.com</a></div>
+        </div>
+      </div>`;
+    }
+
+    // Leg 3: city hub to destination attraction
+    html+=`<div class="rr-leg">
+      <div class="rr-leg-mode">🚌</div>
+      <div class="rr-leg-info">
+        <span class="rr-leg-name">ใจกลางเมือง ${cityTo.zh} → ${attTo.zh}</span>
+        <span class="rr-leg-time">${minutesToStr(localToMin)}</span>
+        <div class="rr-leg-detail">${attLocalDesc[aToId]||'รถบัส/รถไฟท้องถิ่น'}</div>
+      </div>
+    </div>`;
+    totalMin+=localToMin;
+    priceMin='฿500+';
+  }
+
+  // Total time bar
+  html+=`<div class="rr-total">
+    <div>
+      <div class="rr-total-label">⏱ เวลาเดินทางรวมโดยประมาณ</div>
+      <div class="rr-total-time">${minutesToStr(totalMin)}</div>
+    </div>
+    <div style="text-align:right">
+      <div class="rr-total-label">💰 ค่าใช้จ่ายโดยประมาณ</div>
+      <div class="rr-total-price">${sameCity?'฿0–200 บาท':'ดูราคาแต่ละขา'}</div>
+    </div>
+  </div>`;
+
+  html+=`<div class="rr-note">⚠️ เวลาและราคาเป็นข้อมูลอ้างอิง ไม่รวมเวลารอ/ต่อเชื่อมต่อ กรุณายืนยันก่อนเดินทาง</div>`;
+  res.innerHTML=html;
+}
+
+/* ══════════════════════════════
+   LEAFLET MAP
+══════════════════════════════ */
+function flyToCity(id){
+  const c=cities.find(x=>x.id===id);if(!c)return;
+  document.getElementById('map-section').scrollIntoView({behavior:'smooth'});
+  setTimeout(()=>map.flyTo([c.lat,c.lng],11,{animate:true,duration:1.8}),700);
+}
+
+const map=L.map('tmap',{center:[32,108],zoom:5,zoomControl:false,scrollWheelZoom:true});
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(map);
+L.control.zoom({position:'topright'}).addTo(map);
+
+// City markers
+cities.forEach(c=>{
+  const icon=L.divIcon({
+    className:'',
+    html:`<div style="position:relative;cursor:none">
+      <svg width="22" height="22" viewBox="0 0 22 22">
+        <polygon points="11,2 13.2,7.8 19.5,8.2 15,12.2 16.5,18.5 11,15.3 5.5,18.5 7,12.2 2.5,8.2 8.8,7.8" fill="#8b2323" stroke="rgba(255,255,255,0.6)" stroke-width="0.8" style="filter:drop-shadow(0 1px 3px rgba(0,0,0,0.3))"/>
+      </svg>
+      <div class="city-marker-label">${c.zh} ${c.th}</div>
+    </div>`,
+    iconSize:[22,22],iconAnchor:[11,11]
+  });
+  L.marker([c.lat,c.lng],{icon}).addTo(map)
+    .on('click',()=>{closeAtt();map.flyTo([c.lat,c.lng],11,{animate:true,duration:1.5});});
+});
+
+// ── Airport markers ──
+const airportLayerGroup = L.layerGroup();
+const airports = [
+  // Beijing
+  {code:'PEK', name:'สนามบินปักกิ่ง Capital', zh:'首都国际机场', city:'ปักกิ่ง', lat:40.0799, lng:116.6031},
+  {code:'PKX', name:'สนามบินปักกิ่ง Daxing', zh:'大兴国际机场', city:'ปักกิ่ง', lat:39.5098, lng:116.4105},
+  // Shanghai
+  {code:'PVG', name:'สนามบินเซี่ยงไฮ้ Pudong', zh:'浦东国际机场', city:'เซี่ยงไฮ้', lat:31.1443, lng:121.8083},
+  {code:'SHA', name:'สนามบินเซี่ยงไฮ้ Hongqiao', zh:'虹桥国际机场', city:'เซี่ยงไฮ้', lat:31.1979, lng:121.3363},
+  // Chengdu
+  {code:'TFU', name:'สนามบินเฉิงตู Tianfu', zh:'天府国际机场', city:'เฉิงตู', lat:30.3125, lng:104.4441},
+  {code:'CTU', name:'สนามบินเฉิงตู Shuangliu', zh:'双流国际机场', city:'เฉิงตู', lat:30.5785, lng:103.9471},
+  // Xi'an
+  {code:'XIY', name:"สนามบินซีอาน Xianyang", zh:'西安咸阳国际机场', city:'ซีอาน', lat:34.4471, lng:108.7516},
+  // Guilin
+  {code:'KWL', name:'สนามบินกุ้ยหลิน Liangjiang', zh:'桂林两江国际机场', city:'กุ้ยหลิน', lat:25.2181, lng:110.0394},
+  // Lijiang
+  {code:'LJG', name:'สนามบินลี่เจียง Sanyi', zh:'丽江三义国际机场', city:'ลี่เจียง', lat:26.6803, lng:100.2462},
+  // Chongqing
+  {code:'CKG', name:'สนามบินฉงชิ่ง Jiangbei', zh:'重庆江北国际机场', city:'ฉงชิ่ง', lat:29.7192, lng:106.6419},
+  // Hangzhou
+  {code:'HGH', name:'สนามบินหังโจว Xiaoshan', zh:'萧山国际机场', city:'หังโจว', lat:30.2295, lng:120.4341},
+  // Kunming
+  {code:'KMG', name:'สนามบินคุนหมิง Changshui', zh:'昆明长水国际机场', city:'คุนหมิง', lat:25.1019, lng:102.9291},
+  // Dali
+  {code:'DLU', name:'สนามบินต้าหลี่', zh:'大理机场', city:'ต้าหลี่', lat:25.6494, lng:100.3194},
+  // Guangzhou
+  {code:'CAN', name:'สนามบินกว่างโจว Baiyun', zh:'广州白云国际机场', city:'กว่างโจว', lat:23.3924, lng:113.2988},
+  // Sanya
+  {code:'SYX', name:'สนามบินซานย่า Phoenix', zh:'凤凰国际机场', city:'ซานย่า', lat:18.3029, lng:109.4124},
+  // Xiamen
+  {code:'XMN', name:'สนามบินเซียะเหมิน Gaoqi', zh:'厦门高崎国际机场', city:'เซียะเหมิน', lat:24.5440, lng:118.1277},
+  // Huangshan
+  {code:'TXN', name:'สนามบินหวงซาน Tunxi', zh:'黄山屯溪国际机场', city:'หวงซาน', lat:29.7328, lng:118.2554},
+  // Zhangjiajie
+  {code:'DYG', name:'สนามบินจางเจียเจี้ย Hehua', zh:'张家界荷花国际机场', city:'จางเจียเจี้ย', lat:29.1017, lng:110.4438},
+  // Lhasa
+  {code:'LXA', name:'สนามบินลาซา Gonggar', zh:'拉萨贡嘎机场', city:'ลาซา', lat:29.2977, lng:90.9119},
+  // Nanjing (from routes)
+  {code:'NKG', name:'สนามบินนานกิง Lukou', zh:'南京禄口国际机场', city:'นานกิง', lat:31.7418, lng:118.8601},
+];
+
+const airportIcon = L.divIcon({
+  className:'',
+  html:`<div style="cursor:none;text-align:center">
+    <div style="background:#1c1a17;border:1.5px solid rgba(200,193,180,0.6);border-radius:3px;padding:2px 5px;font-size:0.6rem;color:#f0ebe1;font-family:'Noto Serif SC',serif;letter-spacing:0.06em;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3)">✈</div>
+  </div>`,
+  iconSize:[20,20],iconAnchor:[10,10]
+});
+
+airports.forEach(ap=>{
+  const icon=L.divIcon({
+    className:'',
+    html:`<div style="cursor:none;text-align:center">
+      <div style="background:#1c1a17;border:1.5px solid rgba(200,193,180,0.5);border-radius:3px;padding:2px 6px;font-size:0.58rem;color:#e8d5a3;font-family:'Noto Serif SC',serif;letter-spacing:0.06em;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.35)">✈ ${ap.code}</div>
+      <div style="position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:2px;background:rgba(28,26,23,0.82);border:1px solid rgba(200,193,180,0.2);padding:0.15rem 0.45rem;font-family:'Noto Serif SC',serif;font-size:0.55rem;color:rgba(240,235,225,0.85);white-space:nowrap;border-radius:1px;pointer-events:none">${ap.city}</div>
+    </div>`,
+    iconSize:[52,20],iconAnchor:[26,10]
+  });
+  const m=L.marker([ap.lat,ap.lng],{icon})
+    .bindPopup(`<b>✈ ${ap.code}</b><br>${ap.zh}<br>${ap.name}<br>เมือง: ${ap.city}`,{closeButton:true})
+    .on('click',function(){this.openPopup();});
+  airportLayerGroup.addLayer(m);
+});
+
+let airportsVisible=false;
+function toggleAirports(btn){
+  airportsVisible=!airportsVisible;
+  if(airportsVisible){
+    airportLayerGroup.addTo(map);
+    btn.classList.add('on');
+    btn.style.background='#2a4a6b';btn.style.borderColor='#2a4a6b';btn.style.color='#f0ebe1';
+  } else {
+    map.removeLayer(airportLayerGroup);
+    btn.classList.remove('on');
+    btn.style.background='';btn.style.borderColor='';btn.style.color='';
+  }
+}
+
+// ── HSR Station markers ──
+const hsrLayerGroup = L.layerGroup();
+const hsrStations = [
+  // ปักกิ่ง
+  {name:'Beijing South', zh:'北京南站', city:'ปักกิ่ง', th:'สถานีปักกิ่งใต้', routes:'HSR เซี่ยงไฮ้ 4.5 ชม. · เจิ้งโจว 2 ชม. · หนานจิง 2 ชม.', lat:39.8651, lng:116.3784},
+  {name:'Beijing West', zh:'北京西站', city:'ปักกิ่ง', th:'สถานีปักกิ่งตะวันตก', routes:'รถไฟ Chengdu 8.5 ชม. · Lhasa 40 ชม. · Xi\'an 4.5 ชม.', lat:39.8954, lng:116.3224},
+  // เซี่ยงไฮ้
+  {name:'Shanghai Hongqiao', zh:'上海虹桥站', city:'เซี่ยงไฮ้', th:'สถานีเซี่ยงไฮ้หงเฉียว', routes:'HSR หังโจว 45 น. · หนานจิง 1 ชม. · ปักกิ่ง 4.5 ชม.', lat:31.1979, lng:121.3219},
+  // เฉิงตู
+  {name:'Chengdu East', zh:'成都东站', city:'เฉิงตู', th:'สถานีเฉิงตูตะวันออก', routes:'HSR ฉงชิ่ง 1 ชม. · ซีอาน 3.5 ชม. · คุนหมิง 3 ชม.', lat:30.6282, lng:104.1417},
+  {name:'Tianfu Station', zh:'天府站', city:'เฉิงตู', th:'สถานีเทียนฝู่ (ใต้สนามบิน TFU)', routes:'เชื่อมสนามบิน TFU · HSR กุ้ยหยาง 1.5 ชม.', lat:30.2833, lng:104.4417},
+  // ซีอาน
+  {name:"Xi'an North", zh:'西安北站', city:'ซีอาน', th:'สถานีซีอานเหนือ', routes:"HSR ปักกิ่ง 4.5 ชม. · เฉิงตู 3.5 ชม. · เจิ้งโจว 2 ชม.", lat:34.3757, lng:108.9600},
+  // กุ้ยหลิน
+  {name:'Guilin North', zh:'桂林北站', city:'กุ้ยหลิน', th:'สถานีกุ้ยหลินเหนือ', routes:'HSR กว่างโจว 2 ชม. · ปักกิ่ง 7 ชม. · จางเจียเจี้ย 2.5 ชม.', lat:25.3219, lng:110.3020},
+  // ฉงชิ่ง
+  {name:'Chongqing North', zh:'重庆北站', city:'ฉงชิ่ง', th:'สถานีฉงชิ่งเหนือ', routes:'HSR เฉิงตู 1 ชม. · ปักกิ่ง 8 ชม. · คุนหมิง 4 ชม.', lat:29.6091, lng:106.5597},
+  // หังโจว
+  {name:'Hangzhou East', zh:'杭州东站', city:'หังโจว', th:'สถานีหังโจวตะวันออก', routes:'HSR เซี่ยงไฮ้ 45 น. · หวงซาน 1.5 ชม. · หนิงปั๋ว 1 ชม.', lat:30.2928, lng:120.2157},
+  // คุนหมิง
+  {name:'Kunming South', zh:'昆明南站', city:'คุนหมิง', th:'สถานีคุนหมิงใต้', routes:'HSR ต้าหลี่ 1.5 ชม. · เฉิงตู 3 ชม. · กุ้ยหยาง 2 ชม.', lat:24.9145, lng:102.7373},
+  // ต้าหลี่
+  {name:'Dali Station', zh:'大理站', city:'ต้าหลี่', th:'สถานีต้าหลี่', routes:'HSR คุนหมิง 1.5 ชม. · ลี่เจียง 1 ชม.', lat:25.6133, lng:100.1733},
+  // ลี่เจียง
+  {name:'Lijiang Station', zh:'丽江站', city:'ลี่เจียง', th:'สถานีลี่เจียง', routes:'HSR ต้าหลี่ 1 ชม. · คุนหมิง 2.5 ชม.', lat:26.8556, lng:100.2497},
+  // กว่างโจว
+  {name:'Guangzhou South', zh:'广州南站', city:'กว่างโจว', th:'สถานีกว่างโจวใต้', routes:'HSR ปักกิ่ง 8 ชม. · เซี่ยงไฮ้ 3.5 ชม. · กุ้ยหลิน 2 ชม. · เซินเจิ้น 30 น.', lat:22.8074, lng:113.2651},
+  // เซียะเหมิน
+  {name:'Xiamen North', zh:'厦门北站', city:'เซียะเหมิน', th:'สถานีเซียะเหมินเหนือ', routes:'HSR ฝูโจว 45 น. · กว่างโจว 2 ชม. · เซี่ยงไฮ้ 3.5 ชม.', lat:24.6404, lng:118.0307},
+  // หวงซาน
+  {name:'Huangshan North', zh:'黄山北站', city:'หวงซาน', th:'สถานีหวงซานเหนือ', routes:'HSR หังโจว 1.5 ชม. · หนานจิง 2 ชม.', lat:29.7933, lng:118.3234},
+  // จางเจียเจี้ย
+  {name:'Zhangjiajie West', zh:'张家界西站', city:'จางเจียเจี้ย', th:'สถานีจางเจียเจี้ยตะวันตก', routes:'HSR ฉางซา 2 ชม. · กุ้ยหลิน 2.5 ชม.', lat:29.1268, lng:110.3804},
+  // หนานจิง (จากข้อมูล routes)
+  {name:'Nanjing South', zh:'南京南站', city:'นานกิง', th:'สถานีนานกิงใต้', routes:'HSR เซี่ยงไฮ้ 1 ชม. · ปักกิ่ง 2 ชม. · หังโจว 1.5 ชม.', lat:31.9588, lng:118.7964},
+  // ซานย่า
+  {name:'Sanya Station', zh:'三亚站', city:'ซานย่า', th:'สถานีซานย่า', routes:'HSR วงแหวนเกาะไหหลำ · ฉงไห่ 30 น. · ไหโข่ว 1.5 ชม.', lat:18.2553, lng:109.5120},
+  // ลาซา — รถไฟ Qinghai-Tibet (ไม่ใช่ HSR แต่สำคัญ)
+  {name:'Lhasa Station', zh:'拉萨站', city:'ลาซา', th:'สถานีลาซา (ชิงไห่-ทิเบต)', routes:'Z21 ปักกิ่ง 40 ชม. · ผ่านระดับ 5,072 ม. ⚠️ Permit จำเป็น', lat:29.6498, lng:91.1418},
+];
+
+hsrStations.forEach(st=>{
+  const icon=L.divIcon({
+    className:'',
+    html:`<div style="cursor:none;text-align:center;position:relative">
+      <div style="background:#3a2a6b;border:1.5px solid rgba(180,160,220,0.6);border-radius:3px;padding:2px 6px;font-size:0.58rem;color:#e8d5f8;font-family:'Noto Serif SC',serif;letter-spacing:0.06em;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.35)">🚄 HSR</div>
+      <div style="position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:2px;background:rgba(58,42,107,0.88);border:1px solid rgba(180,160,220,0.3);padding:0.15rem 0.5rem;font-family:'Noto Serif SC',serif;font-size:0.55rem;color:rgba(232,213,248,0.9);white-space:nowrap;border-radius:1px;pointer-events:none">${st.city}</div>
+    </div>`,
+    iconSize:[52,20],iconAnchor:[26,10]
+  });
+  const m=L.marker([st.lat,st.lng],{icon})
+    .bindPopup(`<b>🚄 ${st.name}</b><br><span style="color:#5a3a9b">${st.zh}</span><br><small style="color:#666">${st.th}</small><br><hr style="margin:4px 0;border-color:#ddd"><small>${st.routes}</small>`,{closeButton:true,maxWidth:260})
+    .on('click',function(){this.openPopup();});
+  hsrLayerGroup.addLayer(m);
+});
+
+let hsrVisible=false;
+function toggleHSR(btn){
+  hsrVisible=!hsrVisible;
+  if(hsrVisible){
+    hsrLayerGroup.addTo(map);
+    btn.classList.add('on');
+    btn.style.background='#3a2a6b';btn.style.borderColor='#3a2a6b';btn.style.color='#f0ebe1';
+  } else {
+    map.removeLayer(hsrLayerGroup);
+    btn.classList.remove('on');
+    btn.style.background='';btn.style.borderColor='';btn.style.color='';
+  }
+}
+
+// Attraction markers — hidden by default
+let allAttMarkers=[];
+attractions.forEach(a=>{
+  const color=catColors[a.cat]||'#555';
+  const icon=L.divIcon({
+    className:'',
+    html:`<div style="cursor:none">
+      <svg width="28" height="34" viewBox="0 0 28 34">
+        <path d="M14 2 C6 2 2 8 2 14 C2 23 14 32 14 32 C14 32 26 23 26 14 C26 8 22 2 14 2Z" fill="${color}" stroke="rgba(255,255,255,0.35)" stroke-width="0.8" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.25))"/>
+        <text x="14" y="18" text-anchor="middle" font-size="11">${catEmoji[a.cat]}</text>
+      </svg>
+    </div>`,
+    iconSize:[28,34],iconAnchor:[14,32]
+  });
+  const m=L.marker([a.lat,a.lng],{icon}).on('click',()=>showAtt(a));
+  allAttMarkers.push({marker:m,cat:a.cat});
+  // NOT added to map by default
+});
+
+let currentCat='none';
+function setFilter(cat,btn){
+  currentCat=cat;
+  document.querySelectorAll('.f-chip').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  allAttMarkers.forEach(({marker,cat:c})=>{
+    if(cat==='all'||cat===c){if(!map.hasLayer(marker))map.addLayer(marker);}
+    else{if(map.hasLayer(marker))map.removeLayer(marker);}
+  });
+  closeAtt();
+  // Update hint
+  const hint=document.getElementById('map-hint');
+  if(hint) hint.style.display=cat==='none'?'block':'none';
+}
+
+function showAtt(a){
+  const pop=document.getElementById('attpop');
+  const color=catColors[a.cat]||'#555';
+  document.getElementById('attpop-inner').innerHTML=`
+    ${a.img?`<img class="atp-img" src="${a.img}" alt="${a.en}" loading="lazy">`:`<div class="atp-img-ph">${catEmoji[a.cat]}</div>`}
+    <div class="atp-body">
+      <span class="atp-cat" style="background:${color}18;color:${color};border:1px solid ${color}35">${catNames[a.cat]}</span>
+      <span class="atp-zh">${a.zh}</span>
+      <span class="atp-en">${a.en} · ${a.th}</span>
+      <p class="atp-desc">${a.desc}</p>
+      <div class="atp-grid">
+        <div class="atp-cell"><div class="atp-lbl">🕐 เวลาเปิด</div><div class="atp-val">${a.hours}</div></div>
+        <div class="atp-cell"><div class="atp-lbl">🎫 ค่าเข้า</div><div class="atp-val ${a.price===0?'grn':''}">${a.price===0?'ฟรี':'¥'+a.price}</div></div>
+        <div class="atp-cell"><div class="atp-lbl">📍 ความสูง</div><div class="atp-val">${a.elevation}</div></div>
+        <div class="atp-cell"><div class="atp-lbl">🫧 ออกซิเจน</div><div class="atp-val ${a.oxygen?'warn':'grn'}">${a.oxygen?'⚠️ระวัง':'✅ปกติ'}</div></div>
+        <div class="atp-cell"><div class="atp-lbl">👴 ผู้สูงอายุ</div><div class="atp-val">${a.elderly}</div></div>
+        <div class="atp-cell"><div class="atp-lbl">👧 เด็ก</div><div class="atp-val">${a.kids}</div></div>
+      </div>
+      <div class="atp-tags">
+        <span class="${a.bus.startsWith('✅')?'atp-tag y':'atp-tag w'}">${a.bus}</span>
+        <span class="atp-tag">📅 ${a.closedSeason}</span>
+      </div>
+    </div>`;
+  pop.scrollTop=0;
+  pop.classList.add('open');
+}
+function closeAtt(){document.getElementById('attpop').classList.remove('open');}
+document.getElementById('tmap').addEventListener('click',e=>{if(!e.target.closest('.leaflet-marker-icon'))closeAtt();});
+
+/* ══════════════════════════════
+   CITY MODAL
+══════════════════════════════ */
+function openMd(id){
+  const c=cities.find(x=>x.id===id);if(!c)return;
+  document.getElementById('mdbox').innerHTML=`
+    <div class="md-close-bar"><button class="md-x" onclick="closeMd()">✕</button></div>
+    <div class="md-hero">
+      <img src="${c.img}" alt="${c.en}">
+      <div class="md-hero-ov"></div>
+      <div class="md-htitle">
+        <span class="md-czh">${c.zh}</span>
+        <span class="md-cen">${c.en} · ${c.th}</span>
+      </div>
+    </div>
+    <div class="md-body">
+      <div class="ig">
+        <div class="ig-b"><div class="ig-l">ประชากร</div><div class="ig-v">${c.pop}</div></div>
+        <div class="ig-b"><div class="ig-l">พื้นที่</div><div class="ig-v">${c.area}</div></div>
+        <div class="ig-b"><div class="ig-l">ภูมิอากาศ</div><div class="ig-v">${c.climate}</div></div>
+        <div class="ig-b"><div class="ig-l">ช่วงดีที่สุด</div><div class="ig-v red">${c.best}</div></div>
+        <div class="ig-b"><div class="ig-l">มณฑล</div><div class="ig-v">${c.province}</div></div>
+        <div class="ig-b"><div class="ig-l">หัวข้อ</div><div class="ig-v gold">${c.tags.join(' · ')}</div></div>
+      </div>
+      <div class="ms"><div class="ms-t">เกี่ยวกับเมือง</div><p class="ms-txt">${c.full}</p></div>
+      <div class="ms"><div class="ms-t">สถานที่ไม่ควรพลาด</div>
+        <div class="al">${c.attractions.map(a=>`
+          <div class="ai">
+            <span class="ai-ic">${a.icon}</span>
+            <div>
+              <span class="ai-zh">${a.zh}</span>
+              <span class="ai-n">${a.name}</span>
+              <span class="ai-d">${a.desc}</span>
+            </div>
+          </div>`).join('')}
+        </div>
+      </div>
+      <div class="ms"><div class="ms-t">การเดินทาง</div>
+        <div class="tg">
+          <div class="ti"><span class="ti-ic">✈️</span><div class="ti-l">สนามบิน</div><div class="ti-v">${c.transport.air}</div>
+            <div class="trans-btns"><a class="tbtn" href="https://www.trip.com/flights/" target="_blank">✈️ จองที่ Trip.com</a></div>
+          </div>
+          <div class="ti"><span class="ti-ic">🚄</span><div class="ti-l">รถไฟ HSR</div><div class="ti-v">${c.transport.rail}</div>
+            <div class="trans-btns"><a class="tbtn" href="https://www.trip.com/trains/" target="_blank">🚄 จองที่ Trip.com</a><a class="tbtn" href="https://www.12306.cn" target="_blank">🇨🇳 12306</a></div>
+          </div>
+          <div class="ti" style="grid-column:1/-1"><span class="ti-ic">🚇</span><div class="ti-l">MRT ในเมือง</div><div class="ti-v">${c.transport.metro}</div></div>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('mdbg').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeMd(e){
+  if(e&&e.target!==document.getElementById('mdbg'))return;
+  document.getElementById('mdbg').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+/* ══════════════════════════════
+   CUSTOM CURSOR
+══════════════════════════════ */
+const cur=document.getElementById('cur'),cur2=document.getElementById('cur2');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur2.style.left=mx+'px';cur2.style.top=my+'px';});
+(function loop(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;cur.style.left=rx+'px';cur.style.top=ry+'px';requestAnimationFrame(loop)})();
+document.querySelectorAll('button,.ci-btn,.f-chip').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cur.style.width='32px';cur.style.height='32px';cur.style.borderColor='var(--red)';});
+  el.addEventListener('mouseleave',()=>{cur.style.width='20px';cur.style.height='20px';cur.style.borderColor='var(--ink3)';});
+});
+
+/* ══════════════════════════════
+   SCROLL REVEAL
+══════════════════════════════ */
+const obs=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('on');}),{threshold:.1,rootMargin:'0px 0px -30px 0px'});
+renderCards();
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+</script>
+</body>
+</html>
